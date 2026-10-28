@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedClinic - Ethiopian Health Center</title>
+  <meta name="theme-color" content="#0f766e">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;600&display=swap" rel="stylesheet">
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    :root {
+      --primary: #0f766e; --primary-light: #14b8a6; 
+      --bg-main: #f1f5f9; --bg-card: #ffffff; --bg-hover: #f8fafc;
+      --text-dark: #1e293b; --text-muted: #64748b; 
+      --danger: #ef4444; --warning: #f59e0b; --success: #10b981;
+      --border: #e2e8f0;
+    }
+    [data-theme="dark"] {
+      --primary: #14b8a6; --primary-light: #2dd4bf;
+      --bg-main: #0f172a; --bg-card: #1e293b; --bg-hover: #334155;
+      --text-dark: #f8fafc; --text-muted: #94a3b8;
+      --border: #334155;
+    }
+    
+    html,body,#root{height:100%;margin:0;padding:0}
+    *{box-sizing:border-box}
+    body{font-family:'Inter','Noto Sans Ethiopic',sans-serif;background:var(--bg-main);color:var(--text-dark);transition: background 0.3s, color 0.3s;}
+    #root{display:flex;overflow:hidden;height:100vh;width:100vw}
+
+    @media (max-width: 768px) {
+      .sidebar { position: fixed; left: -260px; transition: left 0.3s; z-index: 1000; }
+      .sidebar.open { left: 0; }
+      .mobile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
+      .mobile-overlay.open { display: block; }
+      .page-wrapper { padding: 1rem !important; }
+      .grid-2 { grid-template-columns: 1fr !important; }
+      .inbox-container { grid-template-columns: 1fr !important; }
+      .contact-list { display: none; }
+      .contact-list.mobile-show { display: block; }
+      .chat-area { display: none; }
+      .chat-area.mobile-show { display: flex; }
+    }
+
+    @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+    .skeleton { background: var(--border); background-image: linear-gradient(90deg, var(--border) 0px, var(--bg-hover) 40px, var(--border) 80px); background-size: 1000px 100%; animation: shimmer 2s infinite linear; border-radius: 6px; }
+    .skeleton-text { height: 16px; margin-bottom: 8px; width: 100%; }
+    .skeleton-title { height: 24px; margin-bottom: 16px; width: 40%; }
+    .skeleton-card { height: 100px; margin-bottom: 1rem; }
+
+    .auth-screen{display:flex;width:100%;height:100%;background:linear-gradient(135deg,rgba(15,118,110,.85),rgba(15,23,42,.9)),url('https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=1920') center/cover;align-items:center;justify-content:center;padding:2rem}
+    .auth-box{background:var(--bg-card);padding:2.5rem;border-radius:16px;width:440px;box-shadow:0 20px 40px rgba(0,0,0,.3)}
+    .auth-box h2{text-align:center;color:var(--primary);margin-bottom:1.5rem}
+    .sidebar{width:260px;background:#0f172a;color:#fff;display:flex;flex-direction:column;flex-shrink:0;height:100%}
+    .sidebar-header{padding:1.5rem;font-size:1.2rem;font-weight:700;display:flex;align-items:center;gap:12px;background:#020617;border-bottom:1px solid var(--border)}
+    .sidebar nav{flex:1;padding:1rem 0;overflow-y:auto}
+    .sidebar a{display:flex;align-items:center;gap:15px;padding:.85rem 1.5rem;color:#94a3b8;text-decoration:none;font-weight:500;transition:.2s;cursor:pointer;font-size:.92rem}
+    .sidebar a:hover,.sidebar a.active{background:#1e293b;color:#fff;border-left:4px solid var(--primary-light)}
+    .main-content{flex:1;display:flex;flex-direction:column;height:100%;overflow-y:auto;background:var(--bg-main)}
+    .topbar{background:var(--bg-card);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,.1);position:sticky;top:0;z-index:50;border-bottom: 1px solid var(--border);}
+    .page-wrapper{padding:2rem;max-width:1400px;margin:0 auto;width:100%;min-height:calc(100vh - 60px)}
+    
+    .hero{border-radius:16px;padding:2.5rem 2rem;color:#fff;margin-bottom:2rem;background:linear-gradient(to right,rgba(15,118,110,.9),rgba(13,148,136,.6))}
+    .hero h2{font-size:2rem;margin:0 0 .5rem}
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.25rem;margin-bottom:2rem}
+    .stat-card{background:var(--bg-card);padding:1.25rem;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,.05);display:flex;align-items:center;gap:1rem;border-left:5px solid var(--primary);border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);}
+    .stat-icon{font-size:1.6rem;color:var(--primary);background:rgba(20,184,166,0.1);padding:.85rem;border-radius:12px}
+    .stat-info h3{font-size:.8rem;color:var(--text-muted);text-transform:uppercase;margin:0 0 .25rem}
+    .stat-info p{font-size:1.6rem;font-weight:700;color:var(--text-dark);margin:0}
+    
+    .btn{padding:.55rem 1rem;border:none;border-radius:8px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.2s;font-size:.88rem}
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-primary:disabled{background:#94a3b8;cursor:not-allowed}
+    .btn-danger{background:var(--danger);color:#fff}
+    .btn-outline{background:var(--bg-card);border:1px solid var(--border);color:var(--text-dark)}
+    .btn-outline:hover{background:var(--bg-hover)}
+    .btn-sm{padding:.35rem .7rem;font-size:.78rem}
+    
+    .data-table{width:100%;border-collapse:collapse;background:var(--bg-card);border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,.05);margin-bottom:1.5rem;border: 1px solid var(--border);}
+    .data-table th,.data-table td{padding:.85rem 1rem;text-align:left;border-bottom:1px solid var(--border);font-size:.92rem;color:var(--text-dark)}
+    .data-table th{background:var(--bg-hover);font-weight:600;color:var(--text-muted);font-size:.78rem;text-transform:uppercase}
+    
+    .badge{padding:.25rem .7rem;border-radius:50px;font-size:.7rem;font-weight:700;text-transform:uppercase;display:inline-block}
+    .badge-urgent{background:#fee2e2;color:#991b1b}
+    .badge-routine{background:#dcfce7;color:#166534}
+    .badge-patient{background:#e0f2fe;color:#0369a1}
+    .badge-pending{background:#fef3c7;color:#92400e}
+    .badge-dispensed,.badge-paid{background:#dcfce7;color:#166534}
+    .badge-unpaid{background:#fee2e2;color:#991b1b}
+    
+    .form-group{display:flex;flex-direction:column;gap:.4rem;margin-bottom:.9rem}
+    .form-group label{font-size:.85rem;font-weight:500;color:var(--text-dark)}
+    .form-control{padding:.65rem .85rem;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:.92rem;background:var(--bg-card);color:var(--text-dark);outline:none;width:100%}
+    .form-control:focus{border-color:var(--primary);box-shadow:0 0 0 2px rgba(15,118,110,.2)}
+    
+    .card{background:var(--bg-card);padding:1.5rem;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,.05);margin-bottom:1rem;border: 1px solid var(--border);}
+    .card h3{margin:0 0 1rem;font-size:1.1rem;color:var(--text-dark)}
+    
+    .chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:1.5rem;margin-bottom:2rem}
+    .chart-card{background:var(--bg-card);padding:1.5rem;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,.02);border: 1px solid var(--border);}
+    .chart-card h3{margin:0 0 1rem;font-size:.82rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+    .chart-wrap{position:relative;height:260px}
+    
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    
+    .inbox-container{display:grid;grid-template-columns:300px 1fr;background:var(--bg-card);border-radius:12px;height:calc(100vh - 250px);min-height:500px;box-shadow:0 4px 6px rgba(0,0,0,.05);overflow:hidden;border: 1px solid var(--border);}
+    .contact-list{border-right:1px solid var(--border);overflow-y:auto;background:var(--bg-hover);display:flex;flex-direction:column}
+    .contact-item{padding:1rem;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:12px;transition:.2s}
+    .contact-item:hover,.contact-item.active{background:var(--bg-card);border-left:4px solid var(--primary)}
+    .contact-avatar{width:40px;height:40px;border-radius:50%;background:var(--primary-light);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.1rem;flex-shrink:0}
+    .contact-info h4{margin:0;font-size:.92rem;color:var(--text-dark)}
+    .contact-info p{margin:0;font-size:.75rem;color:var(--text-muted);text-transform:capitalize}
+    .chat-area{display:flex;flex-direction:column;height:100%;background:var(--bg-card)}
+    .chat-area-header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);background:var(--bg-card);display:flex;justify-content:space-between;align-items:center}
+    .chat-area-messages{flex:1;overflow-y:auto;padding:1.5rem;background:var(--bg-main);display:flex;flex-direction:column;gap:1rem}
+    .dm-msg{max-width:70%;padding:.8rem 1rem;border-radius:12px;font-size:.92rem;position:relative}
+    .dm-msg.me{background:var(--primary);color:#fff;align-self:flex-end;border-bottom-right-radius:0}
+    .dm-msg.them{background:var(--bg-card);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:0;color:var(--text-dark)}
+    .dm-sender{font-size:.72rem;margin-bottom:.3rem;font-weight:bold;opacity:.85}
+    .dm-time{font-size:.65rem;text-align:right;margin-top:.4rem;opacity:.75}
+    .chat-area-input{padding:1rem;background:var(--bg-card);border-top:1px solid var(--border)}
+    .chat-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-muted)}
+    
+    .timeline { position: relative; padding-left: 2rem; margin-top: 1rem; }
+    .timeline::before { content: ''; position: absolute; left: 9px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+    .timeline-item { position: relative; margin-bottom: 1.5rem; }
+    .timeline-item::before { content: ''; position: absolute; left: -2rem; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--bg-card); border: 3px solid var(--primary); }
+    .timeline-date { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.25rem; }
+    .timeline-content { background: var(--bg-hover); padding: 1rem; border-radius: 8px; border: 1px solid var(--border); }
+    .timeline-content h4 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--text-dark); }
+    .timeline-content p { margin: 0; font-size: 0.9rem; color: var(--text-muted); }
+
+    .notif-bell{position:relative;cursor:pointer;padding:8px 10px;border-radius:8px;transition:.15s}
+    .notif-bell:hover{background:var(--bg-hover)}
+    .notif-bell i{font-size:1.2rem;color:var(--text-muted)}
+    .notif-badge{position:absolute;top:0;right:2px;background:var(--danger);color:#fff;border-radius:50%;min-width:18px;height:18px;font-size:.65rem;display:flex;align-items:center;justify-content:center;font-weight:700;padding:0 4px;border:2px solid var(--bg-card)}
+    
+    .nav-badge{margin-left:auto;background:var(--danger);color:#fff;border-radius:10px;padding:2px 8px;font-size:.7rem;font-weight:700;min-width:20px;text-align:center;box-shadow:0 2px 4px rgba(239,68,68,0.3)}
+    .emergency-banner{background:linear-gradient(90deg,#dc2626,#ef4444);color:#fff;padding:.85rem 1.5rem;border-radius:12px;margin-bottom:1.5rem;display:flex;align-items:center;gap:12px;box-shadow:0 4px 12px rgba(220,38,38,.3)}
+    .live-dot{display:inline-block;width:6px;height:6px;background:var(--success);border-radius:50%;margin-right:6px;animation:pulse-dot 2s infinite}
+    @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+    
+    .mobile-menu-btn { display: none; background: none; border: none; font-size: 1.5rem; color: var(--text-dark); cursor: pointer; margin-right: 1rem; }
+    @media (max-width: 768px) { .mobile-menu-btn { display: block; } }
+
+    .ai-chat-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 10px 20px rgba(15, 118, 110, 0.3); z-index: 1000; transition: transform 0.2s; border: none; }
+    .ai-chat-btn:hover { transform: scale(1.05); }
+    .ai-chat-window { position: fixed; bottom: 100px; right: 30px; width: 350px; height: 500px; background: var(--bg-card); border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; z-index: 1000; border: 1px solid var(--border); overflow: hidden; }
+    .ai-chat-header { background: var(--primary); color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+    .ai-chat-messages { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .ai-msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; }
+    .ai-msg.user { background: var(--primary); color: white; align-self: flex-end; border-bottom-right-radius: 0; }
+    .ai-msg.bot { background: var(--bg-hover); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 0; color: var(--text-dark); }
+    .ai-chat-input { padding: 10px; border-top: 1px solid var(--border); display: flex; gap: 8px; background: var(--bg-card); }
+    .ai-chat-input input { flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 20px; background: var(--bg-main); color: var(--text-dark); }
+    .ai-chat-input button { background: var(--primary); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script>
+    window.addEventListener('error', function(e) {
+      document.getElementById('root').innerHTML = `<div style="color:red; padding:2rem; font-family:monospace; background:#fff; height:100vh;"><h2>JavaScript Error Detected</h2><p>${e.message}</p><p>at ${e.filename}:${e.lineno}:${e.colno}</p><pre>${e.error ? e.error.stack : ''}</pre></div>`;
+    });
+  </script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    const translations = {
+      en: { dashboard: "Dashboard", communication: "Communication", patients: "Patients", intake: "Intake", queue: "Queue", stock: "Stock", prescriptions: "Prescriptions", appointments: "Appointments", billing: "Billing", notes: "Notes", scan: "Lab Scan", staff: "Staff", audit: "Audit Log", myhealth: "My Health", logout: "Logout", welcome: "Welcome", ai_assistant: "AI Assistant" },
+      am: { dashboard: "ዳሽቦርድ", communication: "መልዕክቶች", patients: "ታካሚዎች", intake: "ተቀባይ", queue: "ሰልፍ", stock: "መድኃኒት ክምችት", prescriptions: "ማዘዣዎች", appointments: "ቀጠሮዎች", billing: "ክፍያ", notes: "ማስታወሻዎች", scan: "የላብራቶሪ ምርመራ", staff: "ሠራተኞች", audit: "የክትትል መዝገብ", myhealth: "የእኔ ጤና", logout: "ውጣ", welcome: "እንኳን ደህና መጡ", ai_assistant: "AI አጋዥ" },
+      om: { dashboard: "Daashboordii", communication: "Qunnamtii", patients: "Dhukkubsattoota", intake: "Simannaa", queue: "Tarree", stock: "Qabeenya", prescriptions: "Qorannoo", appointments: "Beellama", billing: "Kaffaltii", notes: "Barruulee", scan: "Qorannoo Laaboraatoorii", staff: "Hojjettoota", audit: "Galmee To'annoo", myhealth: "Fayyaa Koo", logout: "Ba'i", welcome: "Baga nagaan dhuftan", ai_assistant: "Gargaaraa AI" },
+      ti: { dashboard: "ዳሽቦርድ", communication: "መልእኽትታት", patients: "ሕኩማን", intake: "ተቐባሊ", queue: "ሰልፊ", stock: "ክምችት መድሃኒት", prescriptions: "ማዘዝታት", appointments: "ቆጸራታት", billing: "ክፍሊት", notes: "መዘክርታት", scan: "ላቦራቶሪ መርመራ", staff: "ሰራሕተኛታት", audit: "መዝገብ ትቕታል", myhealth: "ጥዕናይ", logout: "ውጻእ", welcome: "እንቋዕ ብደሓን መጻእኩም", ai_assistant: "ሓጋዚ AI" },
+      so: { dashboard: "Dashboard-ka", communication: "Isgaarsiinta", patients: "Bukaanka", intake: "Soo-dhoweynta", queue: "Safka", stock: "Kaydka", prescriptions: "Daqaayinka", appointments: "Ballamaha", billing: "Biilka", notes: "Qoraallada", scan: "Baaritaanka Shaybaadhka", staff: "Shaqaalaha", audit: "Diiwaanka Hantida", myhealth: "Caafimaadkayga", logout: "Ka bax", welcome: "Ku soo dhawow", ai_assistant: "Kaaliyaha AI" },
+      aa: { dashboard: "Dashboard", communication: "Qalsata", patients: "Dhakhtarak", intake: "Culim", queue: "Saf", stock: "Qari", prescriptions: "Farmasii", appointments: "Waqti", billing: "Cahmi", notes: "Kataysi", scan: "Laboratwar", staff: "Uklit", audit: "Kitab", myhealth: "Sagla", logout: "Kalah", welcome: "Baga nagaan", ai_assistant: "AI Cata" },
+      gz: { dashboard: "ዳሽቦርድ", communication: "መልእኽትታት", patients: "ሕኩማን", intake: "ተቐባሊ", queue: "ሰልፊ", stock: "ክምችት", prescriptions: "ማዘዝታት", appointments: "ቆጸራታት", billing: "ክፍሊት", notes: "መዘክርታት", scan: "ላቦራቶሪ", staff: "ሰራሕተኛታት", audit: "መዝገብ", myhealth: "ጥዕናይ", logout: "ውጻእ", welcome: "እንቋዕ ብደሓን", ai_assistant: "ሓጋዚ AI" },
+      wal: { dashboard: "ዳሽቦርድ", communication: "መልእኽትታት", patients: "ሕኩማን", intake: "ተቐባሊ", queue: "ሰልፊ", stock: "ክምችት", prescriptions: "ማዘዝታት", appointments: "ቆጸራታት", billing: "ክፍሊት", notes: "መዘክርታት", scan: "ላብራቶሪ", staff: "ሰራሕተኛታት", audit: "መዝገብ", myhealth: "ጥዕናይ", logout: "ውጻእ", welcome: "እንቋዕ ብደሓን", ai_assistant: "ሓጋዚ AI" }
+    };
+
+    const api = {
+      token: localStorage.getItem('mc_token'),
+      setToken(t) { this.token = t; t ? localStorage.setItem('mc_token', t) : localStorage.removeItem('mc_token'); },
+      h(extra) { return { ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}), ...(extra || {}) }; },
+      
+      async get(url) { 
+        try {
+          const r = await fetch(url, { headers: this.h() }); 
+          if (r.status === 401) return this.kick(); 
+          const data = await r.json();
+          if (!r.ok) throw new Error(data.error || 'Request failed');
+          return data;
+        } catch(e) { 
+          console.error("GET Error:", e);
+          return { error: e.message }; 
+        }
+      },
+      
+      async post(url, body) { 
+        try {
+          const r = await fetch(url, { method: 'POST', headers: this.h({ 'Content-Type': 'application/json' }), body: JSON.stringify(body) }); 
+          if (r.status === 401) return this.kick(); 
+          const data = await r.json();
+          if (!r.ok) throw new Error(data.error || 'Request failed');
+          return data;
+        } catch(e) { 
+          console.error("POST Error:", e);
+          return { error: e.message }; 
+        }
+      },
+      
+      async postForm(url, fd) { 
+        try {
+          const r = await fetch(url, { method: 'POST', headers: this.h(), body: fd }); 
+          if (r.status === 401) return this.kick(); 
+          const data = await r.json();
+          if (!r.ok) throw new Error(data.error || 'Request failed');
+          return data;
+        } catch(e) { 
+          console.error("POSTFORM Error:", e);
+          return { error: e.message }; 
+        }
+      },
+      kick() { this.setToken(null); window.location.reload(); return {}; }
+    };
+
+    class ErrorBoundary extends React.Component {
+      constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+      static getDerivedStateFromError(error) { return { hasError: true, error }; }
+      render() {
+        if (this.state.hasError) return <div style={{ padding: '2rem', color: 'red', fontFamily: 'monospace', background: '#fff' }}><h1>React Error</h1><pre>{this.state.error.toString()}</pre></div>;
+        return this.props.children;
+      }
+    }
+
+    function Toast({ toasts }) {
+      return <div className="toast-container">{toasts.map(t => (
+        <div key={t.id} className={`toast ${t.type}`} style={{position:'fixed', bottom:20, left:'50%', transform:'translateX(-50%)', background:'#1e293b', color:'#fff', padding:'1rem 1.5rem', borderRadius:8, zIndex:9999, display:'flex', alignItems:'center', gap:10, borderLeft: `4px solid ${t.type==='success' ? '#10b981' : '#ef4444'}`}}>
+          <i className={`fa-solid ${t.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i> {t.message}
+        </div>
+      ))}</div>;
+    }
+
+    function SkeletonCard() {
+      return <div className="card"><div className="skeleton skeleton-title"></div><div className="skeleton skeleton-text"></div><div className="skeleton skeleton-text" style={{width:'80%'}}></div></div>;
+    }
+
+    function SkeletonTable() {
+      return <div className="card" style={{padding:'0'}}>
+        <div style={{padding:'1rem', borderBottom:'1px solid var(--border)'}}><div className="skeleton skeleton-text" style={{width:'30%'}}></div></div>
+        {[1,2,3].map(i => <div key={i} style={{padding:'1rem', borderBottom:'1px solid var(--border)', display:'flex', gap:'1rem'}}><div className="skeleton skeleton-text" style={{width:'20%'}}></div><div className="skeleton skeleton-text" style={{width:'50%'}}></div></div>)}
+      </div>;
+    }
+
+    function BarChart({ labels, values, color = '#14b8a6' }) {
+      const ref = useRef(null); const cr = useRef(null);
+      useEffect(() => {
+        if (!ref.current || !window.Chart) return;
+        if (cr.current) cr.current.destroy();
+        cr.current = new window.Chart(ref.current, {
+          type: 'bar', data: { labels, datasets: [{ data: values, backgroundColor: color, borderRadius: 6 }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#64748b' } }, x: { grid: { display: false }, ticks: { color: '#64748b' } } } }
+        });
+        return () => { if (cr.current) cr.current.destroy(); };
+      }, [JSON.stringify(labels), JSON.stringify(values), color]);
+      return <canvas ref={ref}></canvas>;
+    }
+
+    function DoughnutChart({ labels, values, colors }) {
+      const ref = useRef(null); const cr = useRef(null);
+      useEffect(() => {
+        if (!ref.current || !window.Chart) return;
+        if (cr.current) cr.current.destroy();
+        cr.current = new window.Chart(ref.current, {
+          type: 'doughnut', data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }] },
+          options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { color: '#64748b' } } } }
+        });
+        return () => { if (cr.current) cr.current.destroy(); };
+      }, [JSON.stringify(labels), JSON.stringify(values), JSON.stringify(colors)]);
+      return <canvas ref={ref}></canvas>;
+    }
+
+    function AIChatWidget({ t, language }) {
+      const [isOpen, setIsOpen] = useState(false);
+      const [messages, setMessages] = useState([{ role: 'bot', text: 'Hello! I am your MedClinic AI Assistant. How can I help you today?' }]);
+      const [input, setInput] = useState('');
+      const [loading, setLoading] = useState(false);
+      const endRef = useRef(null);
+
+      useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+      const speakText = (text) => {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel(); 
+          const utterance = new SpeechSynthesisUtterance(text);
+          const voiceMap = { en: 'en-US', am: 'am-ET', om: 'om-ET', ti: 'ti-ET', so: 'so-SO' };
+          utterance.lang = voiceMap[language] || 'en-US';
+          window.speechSynthesis.speak(utterance);
+        } else {
+          alert("Text-to-speech is not supported in this browser.");
+        }
+      };
+
+      const sendMessage = async (e) => {
+        e.preventDefault();
+        if (!input.trim()) return;
+        
+        const userMsg = input;
+        setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+        setInput('');
+        setLoading(true);
+
+        const res = await api.post('/api/ai-chat', { 
+          prompt: userMsg, 
+          context: { role: 'assistant' }, 
+          language: language 
+        });
+
+        if (res.error) {
+           setMessages(prev => [...prev, { role: 'bot', text: `⚠️ AI Error: ${res.error}` }]);
+        } else {
+           setMessages(prev => [...prev, { role: 'bot', text: res.reply || 'Sorry, I could not process that.' }]);
+        }
+        
+        setLoading(false);
+      };
+
+      return (
+        <>
+          <button className="ai-chat-btn" onClick={() => setIsOpen(!isOpen)}>
+            <i className={`fa-solid ${isOpen ? 'fa-times' : 'fa-robot'}`}></i>
+          </button>
+          
+          {isOpen && (
+            <div className="ai-chat-window">
+              <div className="ai-chat-header">
+                <span><i className="fa-solid fa-robot"></i> {t('ai_assistant')}</span>
+                <button className="btn btn-sm" onClick={() => setIsOpen(false)} style={{background:'transparent', color:'white', padding:0}}><i className="fa-solid fa-times"></i></button>
+              </div>
+              <div className="ai-chat-messages">
+                {messages.map((m, i) => (
+                  <div key={i} className={`ai-msg ${m.role}`} style={{ position: 'relative', paddingRight: m.role === 'bot' ? '30px' : '10px' }}>
+                    {m.text}
+                    {m.role === 'bot' && (
+                      <button 
+                        onClick={() => speakText(m.text)} 
+                        style={{ position: 'absolute', right: '5px', bottom: '5px', background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.8rem' }}
+                        title="Listen"
+                      >
+                        <i className="fa-solid fa-volume-high"></i>
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {loading && <div className="ai-msg bot"><i className="fa-solid fa-ellipsis fa-fade"></i> Thinking...</div>}
+                <div ref={endRef} />
+              </div>
+              <form className="ai-chat-input" onSubmit={sendMessage}>
+                <input value={input} onChange={e => setInput(e.target.value)} placeholder="Ask me anything..." />
+                <button type="submit"><i className="fa-solid fa-paper-plane"></i></button>
+              </form>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    function App() {
+      const [currentUser, setCurrentUser] = useState(null);
+      const [checking, setChecking] = useState(!!api.token);
+      const [toasts, setToasts] = useState([]);
+      
+      const addToast = useCallback((msg, type = 'success') => {
+        const id = Date.now() + Math.random();
+        setToasts(p => [...p, { id, message: msg, type }]);
+        setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 3500);
+      }, []);
+
+      useEffect(() => {
+        if (!api.token) { setChecking(false); return; }
+        api.get('/api/auth/me')
+          .then(d => { if (d && d.user) setCurrentUser(d.user); })
+          .catch(err => console.error(err))
+          .finally(() => setChecking(false));
+      }, []);
+
+      if (checking) return <div className="auth-screen"><i className="fa-solid fa-spinner fa-spin" style={{ fontSize: '2rem', color: '#fff' }}></i></div>;
+      if (!currentUser) return <LoginScreen onLogin={(u, t) => { api.setToken(t); setCurrentUser(u); addToast(`Welcome ${u.name}`, 'success'); }} addToast={addToast} />;
+
+      return (<><StaffPortal user={currentUser} addToast={addToast} onLogout={() => { api.setToken(null); setCurrentUser(null); }} /><Toast toasts={toasts} /></>);
+    }
+
+    function LoginScreen({ onLogin, addToast }) {
+      const [mode, setMode] = useState('login');
+      const [f, setF] = useState({ identifier: '', password: '', name: '', email: '', phone: '' });
+      const submit = async (e) => {
+        e.preventDefault();
+        const url = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+        const body = mode === 'login' ? { identifier: f.identifier, password: f.password } : { name: f.name, email: f.email, password: f.password, phone: f.phone };
+        const data = await api.post(url, body);
+        if (data && data.token) onLogin(data.user, data.token); else addToast(data?.error || 'Login failed', 'error');
+      };
+      return (<div className="auth-screen"><div className="auth-box">
+        <h2><i className="fa-solid fa-hospital"></i> MedClinic</h2>
+        <div style={{display:'flex', gap:10, marginBottom:'1.5rem', borderBottom:'1px solid var(--border)'}}>
+          <div style={{padding:'10px', cursor:'pointer', borderBottom: mode==='login' ? '3px solid var(--primary)' : 'none', color: mode==='login' ? 'var(--primary)' : 'var(--text-muted)'}} onClick={() => setMode('login')}>Staff Login</div>
+          <div style={{padding:'10px', cursor:'pointer', borderBottom: mode==='register' ? '3px solid var(--primary)' : 'none', color: mode==='register' ? 'var(--primary)' : 'var(--text-muted)'}} onClick={() => setMode('register')}>Patient Register</div>
+        </div>
+        <form onSubmit={submit}>
+          {mode === 'register' && (<>
+            <div className="form-group"><label>Full Name</label><input className="form-control" required value={f.name} onChange={e => setF({ ...f, name: e.target.value })} /></div>
+            <div className="form-group"><label>Phone</label><input className="form-control" value={f.phone} onChange={e => setF({ ...f, phone: e.target.value })} /></div>
+          </>)}
+          <div className="form-group"><label>Email</label><input type="email" className="form-control" required value={mode==='login' ? f.identifier : f.email} onChange={e => setF({ ...f, [mode==='login'?'identifier':'email']: e.target.value })} /></div>
+          <div className="form-group"><label>Password</label><input type="password" className="form-control" required value={f.password} onChange={e => setF({ ...f, password: e.target.value })} /></div>
+          <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem', width: '100%' }}>{mode === 'login' ? 'Login' : 'Create Account'}</button>
+        </form>
+      </div></div>);
+    }
+
+    function StaffPortal({ user, addToast, onLogout }) {
+      const [page, setPage] = useState('dashboard');
+      const [loading, setLoading] = useState(true);
+      const [sidebarOpen, setSidebarOpen] = useState(false);
+      const [theme, setTheme] = useState(localStorage.getItem('mc_theme') || 'light');
+      
+      const [lang, setLang] = useState(localStorage.getItem('mc_lang') || 'en');
+      const t = (key) => translations[lang]?.[key] || translations['en'][key] || key;
+      
+      const [queue, setQueue] = useState([]);
+      const [stock, setStock] = useState([]);
+      const [users, setUsers] = useState([]);
+      const [patients, setPatients] = useState([]);
+      const [appointments, setAppointments] = useState([]);
+      const [prescriptions, setPrescriptions] = useState([]);
+      const [invoices, setInvoices] = useState([]);
+      const [auditLog, setAuditLog] = useState([]);
+      const [realtimeOn, setRealtimeOn] = useState(false);
+
+      const [selectedPatientHistory, setSelectedPatientHistory] = useState(null);
+      const [activePatient, setActivePatient] = useState(null);
+      const [patientSearch, setPatientSearch] = useState('');
+      
+      const [activeContact, setActiveContact] = useState(null);
+      const [chatMessages, setChatMessages] = useState([]);
+      const [chatInput, setChatInput] = useState('');
+      const [unreadCounts, setUnreadCounts] = useState({});
+      const chatEndRef = useRef(null);
+
+      const [intake, setIntake] = useState({ name: '', phone: '', symptom: '', allergies: '' });
+      const [noteText, setNoteText] = useState('');
+      const [scanResult, setScanResult] = useState('');
+      const [prescriptionDraft, setPrescriptionDraft] = useState([]);
+      const [rxForm, setRxForm] = useState({ medicine_name: '', dosage: '', quantity: 1 });
+      const [aiTriage, setAiTriage] = useState('');
+      
+      const [isScanning, setIsScanning] = useState(false);
+      const [scanFile, setScanFile] = useState(null);
+
+      useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('mc_theme', theme);
+      }, [theme]);
+
+      useEffect(() => {
+        localStorage.setItem('mc_lang', lang);
+      }, [lang]);
+
+      const loadAll = useCallback(async () => {
+        try {
+          setLoading(true);
+          const [q, s, u, p, a, pr, inv] = await Promise.all([
+            api.get('/api/queue'), api.get('/api/stock'), api.get('/api/users'), api.get('/api/patients'),
+            api.get('/api/appointments'), api.get('/api/prescriptions'), api.get('/api/invoices')
+          ]);
+          setQueue(Array.isArray(q) ? q : []); setStock(Array.isArray(s) ? s : []); setUsers(Array.isArray(u) ? u : []); setPatients(Array.isArray(p) ? p : []);
+          setAppointments(Array.isArray(a) ? a : []); setPrescriptions(Array.isArray(pr) ? pr : []); setInvoices(Array.isArray(inv) ? inv : []);
+          if (user.role === 'admin') { const au = await api.get('/api/audit'); setAuditLog(Array.isArray(au) ? au : []); }
+        } catch (err) {
+          console.error("Failed to load data:", err);
+        } finally {
+          setLoading(false);
+        }
+      }, [user.role]);
+
+      const loadUnread = useCallback(async () => {
+        const data = await api.get(`/api/messages/unread/${user.id}`);
+        if (data && data.counts) setUnreadCounts(data.counts);
+      }, [user.id]);
+
+      useEffect(() => { loadAll(); loadUnread(); }, [loadAll, loadUnread]);
+
+      useEffect(() => {
+        let channels = [];
+        const init = async () => {
+          const cfg = await api.get('/api/config');
+          if (!cfg || !cfg.url || !cfg.anonKey || !window.supabase) return;
+          const sb = window.supabase.createClient(cfg.url, cfg.anonKey);
+          sb.realtime.setAuth(api.token);
+          ['queue_tickets', 'stock_items', 'appointments', 'prescriptions', 'invoices', 'messages'].forEach(tbl => {
+            const ch = sb.channel(`mc-${tbl}`).on('postgres_changes', { event: '*', schema: 'public', table: tbl }, () => { loadAll(); loadUnread(); }).subscribe(st => { if(st==='SUBSCRIBED') setRealtimeOn(true); });
+            channels.push(ch);
+          });
+        };
+        init();
+        return () => { channels.forEach(c => c.unsubscribe()); };
+      }, [loadAll, loadUnread]);
+
+      useEffect(() => {
+        if (!activeContact) return;
+        const fetchChat = async () => { const d = await api.get(`/api/messages/${user.id}/${activeContact.id}`); setChatMessages(Array.isArray(d) ? d : []); };
+        fetchChat();
+        const i = setInterval(fetchChat, 4000); return () => clearInterval(i);
+      }, [activeContact, user.id]);
+
+      useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages]);
+
+      useEffect(() => {
+        if (!intake.symptom) { setAiTriage(''); return; }
+        const isUrgent = /chest|bleed|unconscious|breath/i.test(intake.symptom);
+        setAiTriage(isUrgent ? 'Urgent: Recommended Immediate Triage' : 'Routine: Standard Queue');
+      }, [intake.symptom]);
+
+      const submitIntake = async () => {
+        if (!intake.name || !intake.phone) return addToast('Enter name and phone', 'error');
+        await api.post('/api/queue', { patient_name: intake.name, symptom: intake.symptom, phone: intake.phone, allergies: intake.allergies });
+        addToast('Patient added to queue', 'success'); setIntake({ name: '', phone: '', symptom: '', allergies: '' }); loadAll();
+      };
+
+      const viewHistory = async (id) => { const h = await api.get(`/api/patients/${id}/history`); setSelectedPatientHistory(h); };
+
+      const completeVisit = async () => {
+        if (!activePatient) return;
+        await api.post(`/api/queue/${activePatient.id}/complete`, { note: noteText, lab_results: scanResult, prescriptions: prescriptionDraft });
+        addToast('Visit completed & saved', 'success'); setActivePatient(null); setNoteText(''); setScanResult(''); setPrescriptionDraft([]); setPage('queue'); loadAll();
+      };
+
+      const handleDispense = async (id) => {
+        const res = await api.post(`/api/prescriptions/${id}/dispense`);
+        if (res && res.success) { addToast('Medication dispensed successfully', 'success'); loadAll(); } 
+        else { addToast(res?.error || 'Failed to dispense', 'error'); }
+      };
+
+      const handleBookAppointment = async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const res = await api.post('/api/appointments', {
+          patient_name: form.elements['patient'].value,
+          doctor_name: form.elements['doctor'].value,
+          scheduled_at: form.elements['when'].value,
+          reason: 'Consultation'
+        });
+        if (res && res.success) { addToast('Appointment booked successfully', 'success'); loadAll(); form.reset(); } 
+        else { addToast(res?.error || 'Failed to book', 'error'); }
+      };
+
+      const handleCreateStaff = async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const res = await api.post('/api/users', {
+          name: form.elements['name'].value,
+          email: form.elements['email'].value,
+          password: 'password123',
+          role: form.elements['role'].value.toLowerCase()
+        });
+        if (res && res.success) { addToast('Staff account created', 'success'); loadAll(); form.reset(); } 
+        else { addToast(res?.error || 'Failed to create', 'error'); }
+      };
+
+      const handleScanUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setScanFile(file);
+        setIsScanning(true);
+        
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('language', lang); // <--- PASS LANGUAGE TO BACKEND
+        
+        const res = await api.postForm('/api/scan-report', fd);
+        
+        if (res.error) {
+           addToast(res.error, 'error');
+        } else if (res.success) {
+           setScanResult(res.analysis);
+           addToast('Lab report analyzed successfully', 'success');
+        }
+        
+        setIsScanning(false);
+      };
+
+      const navItems = ['dashboard', 'communication', 'patients'];
+      if (user.role === 'admin') navItems.push('intake', 'queue', 'stock', 'prescriptions', 'appointments', 'billing', 'notes', 'scan', 'staff', 'audit');
+      if (user.role === 'doctor') navItems.push('queue', 'appointments', 'notes', 'prescriptions');
+      if (user.role === 'nurse') navItems.push('intake', 'queue', 'appointments');
+      if (user.role === 'pharmacist') navItems.push('stock', 'prescriptions', 'billing');
+      if (user.role === 'patient') { navItems.length = 0; navItems.push('myhealth', 'communication'); }
+
+      const iconFor = (m) => ({ dashboard:'chart-pie', intake:'clipboard-user', queue:'users-line', stock:'pills', notes:'file-medical', scan:'camera', communication:'comments', staff:'user-shield', patients:'address-book', appointments:'calendar-check', prescriptions:'prescription-bottle-medical', billing:'file-invoice-dollar', audit:'list-check', myhealth:'heart-pulse' }[m] || 'circle');
+      
+      const urgentPatients = queue.filter(q => q.priority === 'urgent');
+      const lowStock = stock.filter(s => (s.quantity || 0) < 50);
+      const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
+      const waitTime = Math.ceil((queue.length / Math.max(1, users.filter(u => u.role === 'doctor').length)) * 15);
+
+      return (
+        <div style={{ display: 'flex', width: '100%', height: '100%' }}>
+          <div className={`mobile-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)}></div>
+          
+          <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+            <div className="sidebar-header"><i className="fa-solid fa-hospital"></i> MedClinic</div>
+            <nav>
+              {navItems.map(m => (
+                <a key={m} className={page === m ? 'active' : ''} onClick={() => { setPage(m); setSidebarOpen(false); }}>
+                  <i className={`fa-solid fa-${iconFor(m)}`}></i>
+                  <span style={{ textTransform: 'capitalize' }}>{t(m)}</span>
+                  {m === 'communication' && totalUnread > 0 && <span className="nav-badge">{totalUnread}</span>}
+                </a>
+              ))}
+            </nav>
+            <div style={{ padding: '1rem', borderTop: '1px solid var(--border)', color: '#94a3b8', fontSize: '.8rem' }}>
+              <strong style={{ color: '#fff', display: 'block' }}>{user.name}</strong>
+              <span style={{ textTransform: 'uppercase', fontSize: '.7rem' }}>{user.role}</span>
+              <button className="btn btn-danger btn-sm" style={{ width: '100%', marginTop: '.65rem' }} onClick={onLogout}><i className="fa-solid fa-right-from-bracket"></i> {t('logout')}</button>
+            </div>
+          </aside>
+
+          <main className="main-content">
+            <header className="topbar">
+              <div style={{display:'flex', alignItems:'center'}}>
+                <button className="mobile-menu-btn" onClick={() => setSidebarOpen(true)}><i className="fa-solid fa-bars"></i></button>
+                <h2 style={{ color: 'var(--text-muted)', fontSize: '.9rem', margin: 0 }}>
+                  {realtimeOn ? <span className="live-dot"></span> : null} Live · {waitTime} min wait
+                </h2>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                
+                <select className="form-control" style={{width:'auto', padding:'0.4rem'}} value={lang} onChange={(e) => setLang(e.target.value)}>
+                  <option value="en">🇬🇧 English</option>
+                  <option value="am">🇪🇹 አማርኛ (Amharic)</option>
+                  <option value="om">🇪🇹 Afaan Oromoo</option>
+                  <option value="ti">🇪🇹 ትግርኛ (Tigrinya)</option>
+                  <option value="so">🇪🇹 Soomaali</option>
+                  <option value="aa">🇪🇹 Afar</option>
+                  <option value="gz">🇪🇹 ጉራጌ (Gurage)</option>
+                  <option value="wal">🇪🇹 ወላይታ (Wolaytta)</option>
+                </select>
+
+                <button className="btn btn-outline btn-sm" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+                  <i className={`fa-solid ${theme === 'light' ? 'fa-moon' : 'fa-sun'}`}></i>
+                </button>
+                <div className="notif-bell" style={{ position: 'relative' }}>
+                  <i className="fa-solid fa-bell"></i>
+                  {totalUnread > 0 && <span className="notif-badge">{totalUnread}</span>}
+                </div>
+              </div>
+            </header>
+
+            <div className="page-wrapper">
+              {loading ? (
+                <>
+                  <div className="skeleton skeleton-title" style={{height: 100, marginBottom: '2rem'}}></div>
+                  <div className="stat-grid"><SkeletonCard /><SkeletonCard /><SkeletonCard /></div>
+                  <SkeletonTable />
+                </>
+              ) : (
+                <>
+                  {page === 'dashboard' && (<>
+                    <div className="hero"><h2>{t('welcome')}, {user.name}</h2><p>Clinic Overview</p></div>
+                    <div className="stat-grid">
+                      <div className="stat-card"><div className="stat-icon"><i className="fa-solid fa-users-line"></i></div><div className="stat-info"><h3>{t('queue')}</h3><p>{queue.length}</p></div></div>
+                      <div className="stat-card" style={{borderLeftColor:'var(--danger)'}}><div className="stat-icon" style={{color:'var(--danger)', background:'#fee2e2'}}><i className="fa-solid fa-triangle-exclamation"></i></div><div className="stat-info"><h3>Urgent</h3><p>{urgentPatients.length}</p></div></div>
+                      <div className="stat-card" style={{borderLeftColor:'var(--warning)'}}><div className="stat-icon" style={{color:'var(--warning)', background:'#fef3c7'}}><i className="fa-solid fa-box-open"></i></div><div className="stat-info"><h3>Low Stock</h3><p>{lowStock.length}</p></div></div>
+                      <div className="stat-card" style={{borderLeftColor:'var(--primary-light)'}}><div className="stat-icon"><i className="fa-solid fa-clock"></i></div><div className="stat-info"><h3>Est. Wait Time</h3><p>{waitTime} min</p></div></div>
+                    </div>
+                    <div className="chart-grid">
+                      <div className="chart-card"><h3><i className="fa-solid fa-chart-pie"></i> {t('queue')} Priority</h3><div className="chart-wrap"><DoughnutChart labels={['Urgent', 'Routine']} values={[urgentPatients.length, queue.length - urgentPatients.length]} colors={['#ef4444', '#10b981']} /></div></div>
+                      <div className="chart-card"><h3><i className="fa-solid fa-chart-bar"></i> {t('stock')} Levels</h3><div className="chart-wrap"><BarChart labels={stock.slice(0,5).map(s=>s.medicine_name)} values={stock.slice(0,5).map(s=>s.quantity)} color="#0f766e" /></div></div>
+                    </div>
+                  </>)}
+
+                  {page === 'patients' && (() => {
+                    const filteredPatients = patients.filter(p => p.name?.toLowerCase().includes(patientSearch.toLowerCase()) || p.phone?.includes(patientSearch));
+                    return (<>
+                      <div className="hero"><h2>{t('patients')}</h2><p>Search and view medical history</p></div>
+                      <div className="card">
+                        <input className="form-control" placeholder="Search patients by name or phone..." style={{marginBottom:'1rem'}} value={patientSearch} onChange={e => setPatientSearch(e.target.value)} />
+                        <table className="data-table">
+                          <thead><tr><th>Name</th><th>Phone</th><th>Allergies</th><th>Action</th></tr></thead>
+                          <tbody>
+                            {filteredPatients.length === 0 ? (
+                               <tr><td colSpan="4" style={{textAlign:'center', padding:'2rem', color:'var(--text-muted)'}}>No patients found</td></tr>
+                            ) : filteredPatients.map(p => (
+                              <tr key={p.id}>
+                                <td>{p.name}</td><td>{p.phone}</td><td>{p.allergies || 'None'}</td>
+                                <td><button className="btn btn-primary btn-sm" onClick={() => viewHistory(p.id)}>View 360 History</button></td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>);
+                  })()}
+
+                  {page === 'intake' && (<>
+                    <div className="hero"><h2>{t('intake')}</h2><p>Register walk-in patients</p></div>
+                    <div className="grid-2">
+                      <div className="card">
+                        <div className="form-group"><label>Name</label><input className="form-control" value={intake.name} onChange={e => setIntake({ ...intake, name: e.target.value })} /></div>
+                        <div className="form-group"><label>Phone</label><input className="form-control" value={intake.phone} onChange={e => setIntake({ ...intake, phone: e.target.value })} /></div>
+                        <div className="form-group"><label>Symptom</label><input className="form-control" value={intake.symptom} onChange={e => setIntake({ ...intake, symptom: e.target.value })} /></div>
+                        {aiTriage && <div style={{padding:'0.5rem', background: aiTriage.includes('Urgent') ? '#fee2e2' : '#dcfce7', color: aiTriage.includes('Urgent') ? '#991b1b' : '#166534', borderRadius:6, marginBottom:'1rem', fontSize:'0.85rem'}}><i className="fa-solid fa-robot"></i> AI Triage: {aiTriage}</div>}
+                        <button className="btn btn-primary" onClick={submitIntake}>Add to Queue</button>
+                      </div>
+                      <div className="card" style={{textAlign:'center'}}>
+                        <h3>QR Self-Registration</h3>
+                        <p style={{fontSize:'0.85rem', color:'var(--text-muted)'}}>Patients can scan this to register themselves.</p>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://localhost:3000/register" alt="QR Code" style={{margin:'1rem auto', display:'block'}} />
+                      </div>
+                    </div>
+                  </>)}
+
+                  {page === 'queue' && (<>
+                    <div className="hero"><h2>{t('queue')}</h2><p>Manage waiting patients</p></div>
+                    <table className="data-table">
+                      <thead><tr><th>Ticket</th><th>Patient</th><th>Symptom</th><th>Priority</th><th>Action</th></tr></thead>
+                      <tbody>{queue.map(q => (
+                        <tr key={q.id} style={{ background: q.priority === 'urgent' ? 'rgba(239,68,68,0.05)' : 'transparent' }}>
+                          <td>{q.ticket_number}</td><td>{q.patient_name}</td><td>{q.symptom}</td>
+                          <td><span className={`badge badge-${q.priority}`}>{q.priority}</span></td>
+                          <td><button className="btn btn-primary btn-sm" onClick={() => { setActivePatient(q); setPage('notes'); }}>See Doctor</button></td>
+                        </tr>
+                      ))}</tbody>
+                    </table>
+                  </>)}
+
+                  {page === 'notes' && (<>
+                    <div className="hero">
+                      <h2>{t('notes')}</h2>
+                      <p>{activePatient ? `Patient: ${activePatient.patient_name}` : 'Select patient from queue'}</p>
+                    </div>
+                    
+                    {!activePatient ? (
+                      <div className="card">
+                        <h3>Select a Patient from Queue</h3>
+                        <select className="form-control" onChange={(e) => {
+                          const p = queue.find(q => q.id === e.target.value);
+                          if (p) setActivePatient(p);
+                        }}>
+                          <option value="">-- Choose a waiting patient --</option>
+                          {queue.map(q => <option key={q.id} value={q.id}>{q.patient_name} - {q.symptom}</option>)}
+                        </select>
+                      </div>
+                    ) : (
+                      <div style={{display:'grid', gridTemplateColumns:'300px 1fr', gap:'2rem'}}>
+                        <div className="card" style={{background:'var(--bg-hover)'}}>
+                          <h3>Patient Info</h3>
+                          <p><strong>Name:</strong> {activePatient.patient_name}</p>
+                          <p><strong>Symptom:</strong> {activePatient.symptom}</p>
+                          <p><strong>Allergies:</strong> <span style={{color: activePatient.allergies ? 'var(--danger)' : 'inherit', fontWeight: activePatient.allergies ? 'bold' : 'normal'}}>{activePatient.allergies || 'None recorded'}</span></p>
+                          <button className="btn btn-outline btn-sm" style={{marginTop:'1rem'}} onClick={() => setActivePatient(null)}>Change Patient</button>
+                        </div>
+                        <div className="card">
+                          <textarea className="form-control" value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="SOAP notes..." style={{height:150, marginBottom:'1rem'}}></textarea>
+                          <h4>Lab Scan Results</h4>
+                          {scanResult ? (
+                             <div style={{padding:'1rem', background:'var(--bg-hover)', borderRadius:6, marginBottom:'1rem', fontSize:'0.85rem', whiteSpace:'pre-wrap'}}>
+                               {scanResult}
+                             </div>
+                          ) : (
+                            <p style={{fontSize:'0.85rem', color:'var(--text-muted)'}}>No scan results attached.</p>
+                          )}
+                          
+                          <h4>Prescription</h4>
+                          <div style={{display:'flex', gap:'0.5rem', marginBottom:'0.5rem'}}>
+                            <input className="form-control" placeholder="Medicine" value={rxForm.medicine_name} onChange={e => setRxForm({...rxForm, medicine_name: e.target.value})} />
+                            <input className="form-control" placeholder="Dosage" value={rxForm.dosage} onChange={e => setRxForm({...rxForm, dosage: e.target.value})} style={{width:'120px'}} />
+                            <button className="btn btn-outline" onClick={() => { setPrescriptionDraft([...prescriptionDraft, rxForm]); setRxForm({medicine_name:'', dosage:'', quantity:1}); }}>Add</button>
+                          </div>
+                          {prescriptionDraft.map((p,i) => <div key={i} style={{fontSize:'0.85rem'}}>{p.medicine_name} - {p.dosage}</div>)}
+                          <button className="btn btn-danger" style={{marginTop:'1rem', width:'100%'}} onClick={completeVisit} disabled={!activePatient}>Complete Visit & Save</button>
+                        </div>
+                      </div>
+                    )}
+                  </>)}
+
+                  {page === 'scan' && (<>
+                    <div className="hero"><h2>{t('scan')}</h2><p>Analyze reports using AI.</p></div>
+                    <div className="grid-2">
+                      <div className="card" style={{textAlign:'center', padding:'3rem', border: '2px dashed var(--border)', cursor:'pointer', background: isScanning ? 'var(--bg-hover)' : 'var(--bg-card)'}}>
+                        <input type="file" id="scan-upload" style={{display:'none'}} accept="image/*,.pdf" onChange={handleScanUpload} />
+                        <label htmlFor="scan-upload" style={{cursor:'pointer'}}>
+                          <i className={`fa-solid ${isScanning ? 'fa-spinner fa-spin' : 'fa-cloud-arrow-up'}`} style={{fontSize:'3rem', color:'var(--primary)', marginBottom:'1rem'}}></i>
+                          <h3>{isScanning ? 'Analyzing with AI...' : 'Upload Lab Report'}</h3>
+                          <p>Click to upload or drag and drop (Image or PDF)</p>
+                        </label>
+                      </div>
+                      
+                      {scanResult && (
+                        <div className="card">
+                          <h3><i className="fa-solid fa-robot"></i> AI Analysis Result</h3>
+                          <div style={{padding:'1rem', background:'var(--bg-hover)', borderRadius:8, fontSize:'0.9rem', whiteSpace:'pre-wrap', maxHeight:'400px', overflowY:'auto'}}>
+                            {scanResult}
+                          </div>
+                          
+                          <div style={{display:'flex', gap:'10px', marginTop:'1rem'}}>
+                            <button className="btn btn-primary" style={{flex:1}} onClick={() => { setNoteText(scanResult); setPage('notes'); addToast('Results sent to Clinical Notes', 'success'); }}>
+                              Send to Clinical Notes
+                            </button>
+                            
+                            <button className="btn btn-outline" onClick={() => {
+                              if ('speechSynthesis' in window) {
+                                window.speechSynthesis.cancel();
+                                const utterance = new SpeechSynthesisUtterance(scanResult);
+                                const voiceMap = { en: 'en-US', am: 'am-ET', om: 'om-ET', ti: 'ti-ET', so: 'so-SO' };
+                                utterance.lang = voiceMap[lang] || 'en-US';
+                                window.speechSynthesis.speak(utterance);
+                              }
+                            }} title="Listen to results">
+                              <i className="fa-solid fa-volume-high"></i>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>)}
+
+                  {page === 'stock' && (<>
+                    <div className="hero"><h2>{t('stock')}</h2><p>Pharmacy Inventory</p></div>
+                    {lowStock.length > 0 && (
+                      <div className="emergency-banner" style={{background:'linear-gradient(90deg,#f59e0b,#fbbf24)'}}>
+                        <i className="fa-solid fa-triangle-exclamation"></i> <strong>Reorder Alert:</strong> {lowStock.length} items are low. Draft Purchase Order generated.
+                      </div>
+                    )}
+                    <table className="data-table">
+                      <thead><tr><th>Medicine</th><th>Qty</th><th>Status</th></tr></thead>
+                      <tbody>{stock.map(s => (
+                        <tr key={s.id}><td>{s.medicine_name}</td><td>{s.quantity}</td><td>{s.quantity < 50 ? <span className="badge badge-urgent">Reorder</span> : <span className="badge badge-routine">OK</span>}</td></tr>
+                      ))}</tbody>
+                    </table>
+                  </>)}
+
+                  {page === 'communication' && (<>
+                    <div className="hero"><h2>{t('communication')}</h2><p>Private messaging</p></div>
+                    <div className="inbox-container">
+                      <div className="contact-list">
+                        {users.filter(u => u.id !== user.id).map(c => (
+                          <div key={c.id} className={`contact-item ${activeContact?.id === c.id ? 'active' : ''}`} onClick={() => setActiveContact(c)}>
+                            <div className="contact-avatar">{c.name.charAt(0)}</div>
+                            <div className="contact-info"><h4>{c.name}</h4><p>{c.role}</p></div>
+                            {unreadCounts[c.id] > 0 && <span className="nav-badge">{unreadCounts[c.id]}</span>}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="chat-area">
+                        {activeContact ? (<>
+                          <div className="chat-area-header"><h3 style={{margin:0}}>{activeContact.name}</h3></div>
+                          <div className="chat-area-messages">
+                            {chatMessages.map(m => (
+                              <div key={m.id} className={`dm-msg ${m.sender_id === user.id ? 'me' : 'them'}`}>
+                                <div className="dm-sender">{m.sender_id === user.id ? 'You' : m.sender_name}</div>
+                                {m.text}
+                              </div>
+                            ))}
+                            <div ref={chatEndRef} />
+                          </div>
+                          <form className="chat-area-input" onSubmit={(e) => { e.preventDefault(); api.post('/api/messages', { sender_id: user.id, receiver_id: activeContact.id, sender_name: user.name, text: chatInput }); setChatInput(''); }}>
+                            <div style={{display:'flex', gap:10}}>
+                              <input className="form-control" value={chatInput} onChange={e => setChatInput(e.target.value)} placeholder="Type a message..." />
+                              <button className="btn btn-primary" type="submit"><i className="fa-solid fa-paper-plane"></i></button>
+                            </div>
+                          </form>
+                        </>) : <div className="chat-empty"><i className="fa-solid fa-comments" style={{fontSize:'3rem', opacity:0.2}}></i><p>Select contact</p></div>}
+                      </div>
+                    </div>
+                  </>)}
+
+                  {page === 'appointments' && (<>
+                    <div className="hero"><h2>{t('appointments')}</h2><p>Schedule and track visits.</p></div>
+                    <div className="card">
+                      <h3>Book Appointment</h3>
+                      <form onSubmit={handleBookAppointment}>
+                        <div className="grid-2">
+                          <div className="form-group">
+                            <label>Patient</label>
+                            <select className="form-control" name="patient" required>
+                              <option value="">Select Patient</option>
+                              {patients.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+                            </select>
+                          </div>
+                          <div className="form-group">
+                            <label>Doctor</label>
+                            <select className="form-control" name="doctor" required>
+                              <option value="">Select Doctor</option>
+                              {users.filter(u=>u.role==='doctor').map(u => <option key={u.id} value={u.name}>{u.name}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="form-group"><label>When</label><input type="datetime-local" className="form-control" name="when" required /></div>
+                        <button className="btn btn-primary" type="submit">Book</button>
+                      </form>
+                    </div>
+                    <table className="data-table">
+                      <thead><tr><th>When</th><th>Patient</th><th>Doctor</th><th>Status</th></tr></thead>
+                      <tbody>{appointments.map(a => (
+                        <tr key={a.id}><td>{new Date(a.scheduled_at).toLocaleString()}</td><td>{a.patient_name}</td><td>{a.doctor_name}</td><td><span className="badge badge-pending">{a.status}</span></td></tr>
+                      ))}</tbody>
+                    </table>
+                  </>)}
+
+                  {page === 'prescriptions' && (<>
+                    <div className="hero"><h2>{t('prescriptions')}</h2><p>Dispense medication.</p></div>
+                    <table className="data-table">
+                      <thead><tr><th>Patient</th><th>Medicine</th><th>Qty</th><th>Status</th><th>Action</th></tr></thead>
+                      <tbody>{prescriptions.map(p => (
+                        <tr key={p.id}>
+                          <td>{p.patient_name}</td><td>{p.medicine_name}</td><td>{p.quantity}</td>
+                          <td><span className={`badge badge-${p.status}`}>{p.status}</span></td>
+                          <td>
+                            <button className="btn btn-primary btn-sm" onClick={() => handleDispense(p.id)} disabled={p.status === 'dispensed'}>
+                              {p.status === 'dispensed' ? 'Dispensed' : 'Dispense'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}</tbody>
+                    </table>
+                  </>)}
+
+                  {page === 'billing' && (<>
+                    <div className="hero"><h2>{t('billing')}</h2><p>Invoices</p></div>
+                    <table className="data-table">
+                      <thead><tr><th>Date</th><th>Patient</th><th>Amount</th><th>Status</th></tr></thead>
+                      <tbody>{invoices.map(i => (
+                        <tr key={i.id}><td>{new Date(i.created_at).toLocaleDateString()}</td><td>{i.patient_name}</td><td>{i.amount} ETB</td><td><span className={`badge badge-${i.status}`}>{i.status}</span></td></tr>
+                      ))}</tbody>
+                    </table>
+                  </>)}
+
+                  {page === 'staff' && (<>
+                    <div className="hero"><h2>{t('staff')}</h2><p>Manage clinic users.</p></div>
+                    <div className="card">
+                      <h3>Add New Staff</h3>
+                      <form onSubmit={handleCreateStaff}>
+                        <div className="grid-2">
+                          <div className="form-group"><label>Name</label><input className="form-control" name="name" required /></div>
+                          <div className="form-group"><label>Email</label><input type="email" className="form-control" name="email" required /></div>
+                        </div>
+                        <div className="form-group">
+                          <label>Role</label>
+                          <select className="form-control" name="role">
+                            <option>Doctor</option><option>Nurse</option><option>Pharmacist</option>
+                          </select>
+                        </div>
+                        <button className="btn btn-primary" type="submit">Create Account</button>
+                      </form>
+                    </div>
+                    <table className="data-table">
+                      <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+                      <tbody>{users.map(u => (
+                        <tr key={u.id}><td>{u.name}</td><td>{u.email}</td><td><span className="badge badge-patient">{u.role}</span></td></tr>
+                      ))}</tbody>
+                    </table>
+                  </>)}
+
+                  {page === 'audit' && (<>
+                    <div className="hero"><h2>{t('audit')}</h2><p>System activity.</p></div>
+                    <table className="data-table">
+                      <thead><tr><th>Time</th><th>User</th><th>Action</th></tr></thead>
+                      <tbody>{auditLog.map(a => (
+                        <tr key={a.id}><td>{new Date(a.created_at).toLocaleString()}</td><td>{a.user_name}</td><td>{a.action}</td></tr>
+                      ))}</tbody>
+                    </table>
+                  </>)}
+
+                  {selectedPatientHistory && (
+                    <div style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:'2rem'}}>
+                      <div className="card" style={{width:'100%', maxWidth:'700px', maxHeight:'80vh', overflowY:'auto'}}>
+                        <div style={{display:'flex', justifyContent:'space-between', marginBottom:'1rem'}}>
+                          <h3>Patient 360 Timeline</h3>
+                          <button className="btn btn-outline btn-sm" onClick={() => setSelectedPatientHistory(null)}>Close</button>
+                        </div>
+                        <div className="timeline">
+                          {[...(selectedPatientHistory.visits || []), ...(selectedPatientHistory.appointments || [])].sort((a,b) => new Date(b.created_at || b.scheduled_at) - new Date(a.created_at || a.scheduled_at)).map((item, i) => (
+                            <div key={i} className="timeline-item">
+                              <div className="timeline-date">{new Date(item.created_at || item.scheduled_at).toLocaleString()}</div>
+                              <div className="timeline-content">
+                                <h4>{item.note ? 'Visit Note' : 'Appointment'}</h4>
+                                <p>{item.note || item.reason || 'Consultation'}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </main>
+          
+          <AIChatWidget t={t} language={lang} />
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<ErrorBoundary><App /></ErrorBoundary>);
+  </script>
+</body>
+</html>
