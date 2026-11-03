@@ -1,6 +1,5 @@
 // ============================================================
-// MedConnect Ethiopia — server.js  (PART 1 / 4)
-// Core setup · helpers · auth · upload · branches
+// MedConnect Ethiopia — server.js (Complete & Fixed)
 // ============================================================
 import express from 'express';
 import path from 'path';
@@ -22,7 +21,6 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 
 
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.error('\n❌ CRITICAL ERROR: Missing Supabase credentials in .env');
-    process.exit(1);
 }
 
 const supabase = createClient(
@@ -32,13 +30,12 @@ const supabase = createClient(
 );
 
 const JWT_SECRET = process.env.JWT_SECRET || 'medconnect-secret-key-12345';
+const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200 });
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
-
-app.post('/api/auth/login', async (req, res) => {
 
 const HASAB_LANGS = {
     'English': 'eng',
@@ -49,6 +46,7 @@ const HASAB_LANGS = {
     'Sidama': 'sid'
 };
 
+// HELPERS
 async function sendFrontend(req, res) {
     try {
         const fs = await import('fs/promises');
@@ -119,6 +117,7 @@ const role = (...roles) => (req, res, next) => {
     next();
 };
 
+// ROUTES
 app.get('/', sendFrontend);
 app.get('/b/:slug', sendFrontend);
 
@@ -268,10 +267,6 @@ app.delete('/api/admin/branches/:id', auth, role('admin', 'super_admin'), async 
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
-// ============================================================
-// MedConnect Ethiopia — server.js  (PART 2 / 4)
-// Feed · Messages · Translation
-// ============================================================
 
 // CLINICAL FEED
 app.get('/api/posts', auth, async (req, res) => {
@@ -519,12 +514,8 @@ app.post('/api/translate', auth, async (req, res) => {
         res.status(500).json({ error: 'Translation failed' });
     }
 });
-// ============================================================
-// MedConnect Ethiopia — server.js  (PART 3 / 4)
-// Workers · Patients · Appointments · Referrals · Lab ·
-// Prescriptions · Inventory · Roles · Staff · Profile · Password
-// ============================================================
 
+// WORKERS
 app.get('/api/branch/workers', auth, role('branch_admin', 'admin', 'super_admin'), async (req, res) => {
     try {
         let q = supabase.from('profiles')
@@ -626,6 +617,7 @@ app.delete('/api/branch/workers/:id', auth, role('branch_admin', 'admin', 'super
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// CLINICAL MODULES (Patients, Appointments, etc.)
 app.get('/api/patients', auth, async (req, res) => {
     try {
         const { q, branch_id } = req.query;
@@ -902,15 +894,9 @@ app.put('/api/profile/password', auth, async (req, res) => {
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
-// ============================================================
-// MedConnect Ethiopia — server.js  (PART 4 / 4)
-// LIVE CONFERENCE
-// ============================================================
 
-const LIVE = {
-    rooms: new Map(),
-    seq: 0
-};
+// LIVE CONFERENCE
+const LIVE = { rooms: new Map(), seq: 0 };
 
 function liveRoom(branchId) {
     if (!LIVE.rooms.has(branchId)) {
@@ -984,13 +970,8 @@ app.post('/api/live/request', auth, async (req, res) => {
         if (room.moderator?.id === req.user.id) return res.status(400).json({ error: 'You are the moderator' });
 
         room.requests.set(req.user.id, {
-            id: req.user.id,
-            name: req.user.name,
-            role: req.user.role,
-            staff_id: req.user.staff_id,
-            lang: req.body.lang || 'English',
-            requestedAt: new Date().toISOString(),
-            status: 'pending'
+            id: req.user.id, name: req.user.name, role: req.user.role, staff_id: req.user.staff_id,
+            lang: req.body.lang || 'English', requestedAt: new Date().toISOString(), status: 'pending'
         });
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
@@ -1001,10 +982,8 @@ app.get('/api/live/requests', auth, role(...LIVE_GUARDS), async (req, res) => {
         const branchId = req.user.branch_id || 'global';
         const room = liveRoom(branchId);
         res.json({
-            active: room.active,
-            moderator: room.moderator,
-            requests: Array.from(room.requests.values()),
-            participants: Array.from(room.participants.values())
+            active: room.active, moderator: room.moderator,
+            requests: Array.from(room.requests.values()), participants: Array.from(room.participants.values())
         });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -1022,8 +1001,7 @@ app.post('/api/live/requests/:userId/:action', auth, role(...LIVE_GUARDS), async
         if (action === 'approve') {
             reqObj.status = 'approved';
             room.participants.set(userId, {
-                id: userId, name: reqObj.name, role: reqObj.role, lang: reqObj.lang,
-                joinedAt: new Date().toISOString()
+                id: userId, name: reqObj.name, role: reqObj.role, lang: reqObj.lang, joinedAt: new Date().toISOString()
             });
             pushSignal(room, 'system', userId, 'approved', { by: req.user.id });
             pushSignal(room, 'system', req.user.id, 'participant-joined', { userId });
@@ -1072,19 +1050,18 @@ app.get('/api/live/signal', auth, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// 404 Catch-all
 app.use((req, res) => res.status(404).json({ error: 'API route not found.', url: req.url, method: req.method }));
 
-// Export the Express app for Vercel
+// Export the app for Vercel
 export default app;
 
-// Only listen on a port if NOT running on Vercel (e.g., locally or on Render)
+// Only listen locally
 if (!process.env.VERCEL) {
     const PORT = process.env.PORT || 5050;
     app.listen(PORT, () => {
         console.log(`\n========================================`);
         console.log(`🚀 MedConnect server running on http://localhost:${PORT}`);
-        console.log(`🎥 Live conference signaling ready`);
-        console.log(`🌐 Hasab AI: eng/amh/orm/tig/som/sid`);
         console.log(`========================================\n`);
     });
 }
