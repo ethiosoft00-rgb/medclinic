@@ -36,6 +36,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'medconnect-secret-key-12345';
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// 👇 ADD THIS VERCEL PATH FIXER 👇
+app.use((req, res, next) => {
+    // If Vercel stripped the /api prefix, add it back
+    if (req.url !== '/' && !req.url.startsWith('/api') && !req.url.includes('.')) {
+        req.url = '/api' + req.url;
+    }
+    next();
+});
+// 👆 END OF FIX 👆
+
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200 });
