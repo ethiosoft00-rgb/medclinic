@@ -1074,11 +1074,17 @@ app.get('/api/live/signal', auth, async (req, res) => {
 
 app.use((req, res) => res.status(404).json({ error: 'API route not found.' }));
 
-const PORT = process.env.PORT || 5050;
-app.listen(PORT, () => {
-    console.log(`\n========================================`);
-    console.log(`🚀 MedConnect server running on http://localhost:${PORT}`);
-    console.log(`🎥 Live conference signaling ready`);
-    console.log(`🌐 Hasab AI: eng/amh/orm/tig/som/sid`);
-    console.log(`========================================\n`);
-});
+// Export the Express app for Vercel
+export default app;
+
+// Only listen on a port if NOT running on Vercel (e.g., locally or on Render)
+if (!process.env.VERCEL) {
+    const PORT = process.env.PORT || 5050;
+    app.listen(PORT, () => {
+        console.log(`\n========================================`);
+        console.log(`🚀 MedConnect server running on http://localhost:${PORT}`);
+        console.log(`🎥 Live conference signaling ready`);
+        console.log(`🌐 Hasab AI: eng/amh/orm/tig/som/sid`);
+        console.log(`========================================\n`);
+    });
+}
