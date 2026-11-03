@@ -1,13 +1,13 @@
 {
-  "name": "MedClinic EHR",
+  "name": "MedClinic",
   "short_name": "MedClinic",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f1f5f9",
+  "background_color": "#0f172a",
   "theme_color": "#0f766e",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3063/3063822.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/2966/2966327.png",
       "sizes": "512x512",
       "type": "image/png"
     }
