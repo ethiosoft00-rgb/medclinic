@@ -1,5 +1,5 @@
 // ============================================================
-// MedConnect Ethiopia — server.js (Part 1 of 3)
+// MedConnect Ethiopia — server.js (Part 1 of 2)
 // ============================================================
 import express from 'express';
 import path from 'path';
@@ -405,7 +405,7 @@ app.post('/api/messages/:id/react', auth, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 // ============================================================
-// MedConnect Ethiopia — server.js (Part 2 of 3)
+// MedConnect Ethiopia — server.js (Part 2 of 2)
 // ============================================================
 
 app.get('/api/translate/languages', auth, (req, res) => {
@@ -460,7 +460,53 @@ app.post('/api/ai', auth, async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'Failed to process AI request' }); }
 });
 
-const LIVE = { active: false, startedAt: null, moderators: new Set(), participants: new Map(), requests: new Map(), signals: [], seq: 0 };
+// ============================================================
+// DIRECT WEBRTC CALLS (MESSAGES)
+// ============================================================
+const CALL_SIGNALS = []; // Stores direct call signals
+let callSeq = 0;
+
+function pushCallSignal(from, to, type, payload) {
+    callSeq += 1;
+    CALL_SIGNALS.push({ seq: callSeq, from, to, type, payload, at: Date.now() });
+    const cutoff = Date.now() - 60_000;
+    // Keep only last minute of signals
+    const filtered = CALL_SIGNALS.filter(s => s.at > cutoff);
+    CALL_SIGNALS.length = 0;
+    CALL_SIGNALS.push(...filtered);
+}
+
+app.post('/api/call/signal', auth, async (req, res) => {
+    try {
+        const { to, type, payload } = req.body;
+        if (!to || !type) return res.status(400).json({ error: 'to and type required' });
+        pushCallSignal(req.user.id, to, type, payload || {});
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/call/signal', auth, async (req, res) => {
+    try {
+        const since = parseInt(req.query.since || '0', 10);
+        const mine = CALL_SIGNALS.filter(s => s.seq > since && (s.to === req.user.id || s.from === req.user.id));
+        const lastSeq = CALL_SIGNALS.length ? CALL_SIGNALS[CALL_SIGNALS.length - 1].seq : since;
+        res.json({ signals: mine, lastSeq });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ============================================================
+// LIVE CONFERENCE (GROUP CALLS)
+// ============================================================
+// Added statuses for mute, camera, raise-hand, reactions
+const LIVE = { 
+    active: false, 
+    startedAt: null, 
+    moderators: new Set(), 
+    participants: new Map(), 
+    requests: new Map(), 
+    signals: [], 
+    seq: 0 
+};
 
 function pushSignal(from, to, type, payload) {
     LIVE.seq += 1;
@@ -475,8 +521,18 @@ const isLiveMod = (user) => LIVE_GUARDS.includes(user.role) || LIVE.moderators.h
 app.post('/api/live/toggle', auth, role(...LIVE_GUARDS), async (req, res) => {
     try {
         const on = !!req.body.on;
-        if (on) { LIVE.active = true; LIVE.startedAt = new Date().toISOString(); LIVE.moderators.add(req.user.id); }
-        else { LIVE.active = false; LIVE.startedAt = null; LIVE.moderators.clear(); LIVE.participants.clear(); LIVE.requests.clear(); LIVE.signals = []; }
+        if (on) { 
+            LIVE.active = true; 
+            LIVE.startedAt = new Date().toISOString(); 
+            LIVE.moderators.add(req.user.id); 
+        } else { 
+            LIVE.active = false; 
+            LIVE.startedAt = null; 
+            LIVE.moderators.clear(); 
+            LIVE.participants.clear(); 
+            LIVE.requests.clear(); 
+            LIVE.signals = []; 
+        }
         pushSignal('system', '*', on ? 'live-on' : 'live-off', {});
         res.json({ success: true, active: LIVE.active });
     } catch (e) { res.status(500).json({ error: e.message }); }
@@ -488,6 +544,21 @@ app.post('/api/live/grant-moderator', auth, async (req, res) => {
         const { userId } = req.body;
         LIVE.moderators.add(userId);
         pushSignal('system', userId, 'granted-mod', { by: req.user.id });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// NEW: Toggle user status (mute, camera, raise hand)
+app.post('/api/live/participant-status', auth, async (req, res) => {
+    try {
+        const { muted, cameraOff, handRaised } = req.body;
+        const p = LIVE.participants.get(req.user.id);
+        if (p) {
+            if (muted !== undefined) p.muted = muted;
+            if (cameraOff !== undefined) p.cameraOff = cameraOff;
+            if (handRaised !== undefined) p.handRaised = handRaised;
+            pushSignal(req.user.id, '*', 'status-update', { id: req.user.id, muted: p.muted, cameraOff: p.cameraOff, handRaised: p.handRaised });
+        }
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -542,7 +613,7 @@ app.post('/api/live/requests/:userId/:action', auth, async (req, res) => {
         if (!reqObj) return res.status(404).json({ error: 'Request not found' });
         if (action === 'approve') {
             reqObj.status = 'approved';
-            LIVE.participants.set(userId, { id: userId, name: reqObj.name, role: reqObj.role, lang: reqObj.lang, joinedAt: new Date().toISOString() });
+            LIVE.participants.set(userId, { id: userId, name: reqObj.name, role: reqObj.role, lang: reqObj.lang, joinedAt: new Date().toISOString(), muted: false, cameraOff: false, handRaised: false });
             pushSignal('system', userId, 'approved', { by: req.user.id });
         } else {
             reqObj.status = 'rejected'; LIVE.requests.delete(userId);
@@ -578,6 +649,9 @@ app.get('/api/live/signal', auth, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ============================================================
+// WORKERS, PATIENTS, AND SYSTEM CRUD
+// ============================================================
 app.get('/api/branch/workers', auth, role('branch_admin', 'admin', 'super_admin'), async (req, res) => {
     try {
         let q = supabase.from('profiles').select('id, full_name, staff_id, phone, role, bio, is_active, created_at, branch_id, avatar_url').order('full_name');
@@ -630,7 +704,6 @@ app.delete('/api/branch/workers/:id', auth, role('branch_admin', 'admin', 'super
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Patient self-service endpoints
 app.get('/api/patient/me', auth, async (req, res) => {
     if (req.user.role !== 'patient') return res.status(403).json({ error: 'Forbidden' });
     try { const { data } = await supabase.from('patients').select('*').eq('created_by', req.user.id).maybeSingle(); res.json(data || null); }
@@ -647,7 +720,6 @@ app.get('/api/patient/my-appointments', auth, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// NEW: Enhanced My Queue with Visit Type Priority
 app.get('/api/patient/my-queue', auth, async (req, res) => {
     if (req.user.role !== 'patient') return res.status(403).json({ error: 'Forbidden' });
     try {
@@ -657,7 +729,6 @@ app.get('/api/patient/my-queue', auth, async (req, res) => {
         const start = new Date(); start.setHours(0,0,0,0); const end = new Date(start); end.setDate(end.getDate() + 1);
         const { data: appts } = await supabase.from('appointments').select('id, patient_id, status, scheduled_at, visit_type').gte('scheduled_at', start.toISOString()).lt('scheduled_at', end.toISOString()).order('scheduled_at', { ascending: true });
         
-        // Sort logic: Emergency first, then scheduled_at time
         const sortedAppts = (appts || []).sort((a, b) => {
             if (a.visit_type === 'Emergency' && b.visit_type !== 'Emergency') return -1;
             if (b.visit_type === 'Emergency' && a.visit_type !== 'Emergency') return 1;
@@ -699,7 +770,6 @@ app.get('/api/patient/my-lab-orders', auth, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Clinical CRUD
 app.get('/api/patients', auth, async (req, res) => {
     try {
         if (req.user.role === 'patient') return res.status(403).json({ error: 'Forbidden' });
@@ -727,8 +797,6 @@ app.post('/api/patients', auth, async (req, res) => {
         }]).select().single();
         
         if (error) throw error;
-
-        // SMART ROUTING LOGIC
         let startLevel = 1;
         let stage = 'triage';
         if (p.visit_type === 'Emergency') { startLevel = 2; stage = 'emergency'; }
@@ -927,9 +995,6 @@ app.put('/api/profile/password', auth, async (req, res) => {
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
-// ============================================================
-// MedConnect Ethiopia — server.js (Part 3 of 3)
-// ============================================================
 
 const WORKFLOW_LEVELS = {
     1:  { key: 'patient_services',      name: 'Patient Services',          stages: ['registration','records','triage','queue'] },
