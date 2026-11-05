@@ -1,5 +1,5 @@
 // ============================================================
-// MedConnect Ethiopia — server.js (Part 1 of 2)
+// MedConnect Ethiopia — server.js (Part 1 of 3)
 // ============================================================
 import express from 'express';
 import path from 'path';
@@ -36,23 +36,41 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
+app.use(express.static(path.join(__dirname), { index: false })); // Fallback to root
 
 async function sendFrontend(req, res) {
     try {
         const fs = await import('fs/promises');
-        let page = await fs.readFile(path.join(__dirname, 'public', 'index.html'), 'utf8');
+        
+        // 1. Try to find it in the public folder
+        let pagePath = path.join(__dirname, 'public', 'index.html');
+        
+        // 2. If not found, try to find it in the root folder
+        try {
+            await fs.access(pagePath);
+        } catch {
+            pagePath = path.join(__dirname, 'index.html');
+        }
+
+        let page = await fs.readFile(pagePath, 'utf8');
         const slug = req.params.slug || '';
+        
         page = page
             .replaceAll('__SUPABASE_URL__', process.env.SUPABASE_URL || '')
             .replaceAll('__SUPABASE_ANON_KEY__', process.env.SUPABASE_ANON_KEY || '')
             .replaceAll('__BRANCH_SLUG__', slug)
             .replaceAll('__TG_HANDLE__', process.env.TG_CS_HANDLE || 'TE21HUSH');
+            
         res.type('html').send(page);
     } catch (error) {
         console.error('Frontend Error:', error);
-        res.status(500).send('Error loading frontend.');
+        res.status(500).send('Error loading frontend. Please ensure index.html exists in the "public" folder or the root folder.');
     }
 }
+
+// 🆕 CRITICAL: Serve the frontend on the root route
+app.get('/', sendFrontend);
+app.get('/b/:slug', sendFrontend);
 
 const slugify = (v) => String(v || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
@@ -106,8 +124,52 @@ const role = (...roles) => (req, res, next) => {
 
 const safe = (p) => { if (!p) return p; const c = { ...p }; delete c.password_hash; return c; };
 
-app.get('/', sendFrontend);
-app.get('/b/:slug', sendFrontend);
+// ============================================================
+// IN-MEMORY STORES (Queue, Triage, Journey)
+// ============================================================
+const QUEUES = new Map();
+const DEFAULT_OFFICES = [
+    { id: 'office-reception', name: 'Reception / Triage', department: 'Reception', active: true },
+    { id: 'office-emergency', name: 'Emergency Room 1', department: 'Emergency', active: true },
+    { id: 'office-lab', name: 'Laboratory Desk 3', department: 'Laboratory', active: true },
+    { id: 'office-pharmacy', name: 'Pharmacy Window 2', department: 'Pharmacy', active: true },
+    { id: 'office-doctor-1', name: 'Doctor Office 1', department: 'Clinical', active: true }
+];
+
+function _getQueue(branchId) {
+    if (!QUEUES.has(branchId)) {
+        QUEUES.set(branchId, {
+            entries: new Map(),
+            seq: 0,
+            offices: new Map(DEFAULT_OFFICES.map(o => [o.id, { ...o }])),
+            announcements: []
+        });
+    }
+    return QUEUES.get(branchId);
+}
+
+function _mkQueueNumber(prefix, seq) { return `${prefix}-${String(seq).padStart(3, '0')}`; }
+
+const TRIAGE_FLAGS = new Map();
+const TRIAGE_OVERRIDES = new Map();
+const JOURNEY_STAGES = ['Registered', 'Waiting', 'With clinician', 'Laboratory', 'Pharmacy', 'Completed'];
+const JOURNEYS = new Map();
+
+function _getJourney(patientId) {
+    if (!JOURNEYS.has(patientId)) {
+        JOURNEYS.set(patientId, {
+            patient_id: patientId, stage: 'Registered', updated_at: new Date().toISOString(),
+            history: [{ stage: 'Registered', at: new Date().toISOString(), by: 'system' }]
+        });
+    }
+    return JOURNEYS.get(patientId);
+}
+
+function _pushAnnouncement(branchId, text) {
+    const q = _getQueue(branchId);
+    q.announcements.push({ id: Date.now(), text, at: new Date().toISOString() });
+    if (q.announcements.length > 50) q.announcements.shift();
+}
 
 // ============================================================
 // AUTH & PASSWORD RESET
@@ -128,7 +190,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
 
 app.post('/api/auth/register', loginLimiter, async (req, res) => {
     try {
-        const { fullName, phone, password } = req.body;
+        const { fullName, phone, password, visitType } = req.body;
         if (!fullName || !phone || !password || password.length < 6) {
             return res.status(400).json({ error: 'Please provide valid name, phone, and a password of at least 6 characters.' });
         }
@@ -150,9 +212,39 @@ app.post('/api/auth/register', loginLimiter, async (req, res) => {
             role: 'patient', phone: cleanPhone, is_active: true
         }]).select().single();
         if (pErr) { await supabase.auth.admin.deleteUser(authData.user.id); return res.status(500).json({ error: pErr.message }); }
-        await supabase.from('patients').insert([{ full_name: fullName, phone: cleanPhone, created_by: authData.user.id, visit_type: 'First Time Check' }]);
+        
+        const { data: newPatient, error: patErr } = await supabase.from('patients').insert([{ 
+            full_name: fullName, phone: cleanPhone, created_by: authData.user.id, visit_type: visitType || 'First Time Check' 
+        }]).select().single();
+
+        if (patErr) { await supabase.auth.admin.deleteUser(authData.user.id); return res.status(500).json({ error: patErr.message }); }
+
+        // AUTO-ADD TO SMART QUEUE ON REGISTRATION
+        const branchId = 'default';
+        const q = _getQueue(branchId);
+        q.seq += 1;
+        const vType = visitType || 'First Time Check';
+        const prefix = vType === 'Emergency' ? 'E' : 'A';
+        const targetOffice = vType === 'Emergency' ? 'office-emergency' : 'office-reception';
+        
+        const entry = {
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            number: _mkQueueNumber(prefix, q.seq),
+            patient_id: newPatient.id,
+            patient_name: fullName,
+            department: vType === 'Emergency' ? 'Emergency' : 'General',
+            office_id: targetOffice,
+            visit_type: vType,
+            status: 'waiting',
+            created_at: new Date().toISOString(),
+            created_by: authData.user.id,
+            branch_id: branchId
+        };
+        q.entries.set(entry.id, entry);
+        _getJourney(newPatient.id).stage = 'Waiting';
+
         const token = jwt.sign({ id: profile.id, role: 'patient', branch_id: null }, JWT_SECRET, { expiresIn: '7d' });
-        res.json({ success: true, message: 'Account created!', user: safe(profile), token });
+        res.json({ success: true, message: 'Account created!', user: safe(profile), token, visitType: vType });
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
@@ -160,16 +252,11 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     try {
         const { identifier, email } = req.body;
         if (!identifier || !email) return res.status(400).json({ error: 'Staff ID and Email required' });
-        
         const { data: profile } = await supabase.from('profiles').select('*').eq('staff_id', identifier).maybeSingle();
         if (!profile) return res.status(404).json({ error: 'Worker not found with this ID.' });
-
         await supabase.from('password_reset_requests').insert([{
-            staff_id: profile.staff_id,
-            full_name: profile.full_name,
-            email: email,
-            branch_id: profile.branch_id,
-            status: 'pending'
+            staff_id: profile.staff_id, full_name: profile.full_name, email: email,
+            branch_id: profile.branch_id, status: 'pending'
         }]);
         res.json({ success: true, message: 'Request sent to administrators' });
     } catch (error) { res.status(500).json({ error: error.message }); }
@@ -189,23 +276,19 @@ app.post('/api/admin/password-requests/:id/resolve', auth, role('branch_admin', 
     try {
         const { data: reqData } = await supabase.from('password_reset_requests').select('*').eq('id', req.params.id).single();
         if (!reqData) return res.status(404).json({ error: 'Request not found' });
-
         const { data: profile } = await supabase.from('profiles').select('id').eq('staff_id', reqData.staff_id).single();
         if (!profile) return res.status(404).json({ error: 'User no longer exists' });
-
         const newPassword = generateTempPassword(10);
         const hash = await bcrypt.hash(newPassword, 10);
-        
         await supabase.from('profiles').update({ password_hash: hash }).eq('id', profile.id);
         try { await supabase.auth.admin.updateUserById(profile.id, { password: newPassword }); } catch (_) {}
-        
         await supabase.from('password_reset_requests').update({ status: 'resolved' }).eq('id', req.params.id);
         res.json({ success: true, new_password: newPassword, email: reqData.email });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ============================================================
-// FILE UPLOAD
+// UPLOAD & BRANCHES
 // ============================================================
 app.post('/api/upload', auth, upload.single('file'), async (req, res) => {
     try {
@@ -221,9 +304,6 @@ app.post('/api/upload', auth, upload.single('file'), async (req, res) => {
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// ============================================================
-// BRANCHES
-// ============================================================
 app.get('/api/admin/branches', auth, role('admin', 'super_admin'), async (req, res) => {
     try {
         const { data: branches, error } = await supabase.from('branches').select('*').order('name');
@@ -264,6 +344,978 @@ app.delete('/api/admin/branches/:id', auth, role('admin', 'super_admin'), async 
     try { await supabase.from('branches').delete().eq('id', req.params.id); res.json({ success: true }); }
     catch (e) { res.status(500).json({ error: e.message }); }
 });
+
+// ============================================================
+// SMART QUEUE (Includes Next Patient & SMS Notifications)
+// ============================================================
+app.get('/api/queue/offices', auth, (req, res) => {
+    const q = _getQueue(req.user.branch_id || 'default');
+    res.json(Array.from(q.offices.values()));
+});
+
+app.get('/api/queue/list', auth, (req, res) => {
+    const q = _getQueue(req.user.branch_id || 'default');
+    const list = Array.from(q.entries.values())
+        .filter(e => !['completed', 'cancelled'].includes(e.status))
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    res.json({ entries: list, announcements: q.announcements.slice(-5) });
+});
+
+app.post('/api/queue/:id/call', auth, (req, res) => {
+    const q = _getQueue(req.user.branch_id || 'default');
+    const entry = q.entries.get(req.params.id);
+    if (!entry) return res.status(404).json({ error: 'Queue entry not found' });
+    
+    entry.status = 'called';
+    entry.called_at = new Date().toISOString();
+    entry.called_by = req.user.name;
+    
+    const office = q.offices.get(entry.office_id);
+    const officeName = office?.name || 'Office';
+    _pushAnnouncement(entry.branch_id, `${entry.number}, please go to ${officeName}.`);
+    
+    // MOCK SMS NOTIFICATION
+    if (entry.private_contact) {
+        _pushAnnouncement(entry.branch_id, `📱 SMS sent to ${entry.patient_name}`);
+    }
+    res.json({ success: true, entry });
+});
+
+app.post('/api/queue/office/:officeId/next', auth, (req, res) => {
+    const q = _getQueue(req.user.branch_id || 'default');
+    const officeId = req.params.officeId;
+    
+    const nextInLine = Array.from(q.entries.values())
+        .filter(e => e.office_id === officeId && e.status === 'waiting')
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))[0];
+
+    if (!nextInLine) return res.status(404).json({ error: 'No patients waiting for this office.' });
+
+    nextInLine.status = 'called';
+    nextInLine.called_at = new Date().toISOString();
+    
+    const office = q.offices.get(officeId);
+    _pushAnnouncement(nextInLine.branch_id, `📢 Ticket ${nextInLine.number}, please proceed to ${office.name}.`);
+    
+    res.json({ success: true, patient: nextInLine });
+});
+
+app.post('/api/queue/:id/arrived', auth, (req, res) => {
+    const q = _getQueue(req.user.branch_id || 'default');
+    const entry = q.entries.get(req.params.id);
+    if (!entry) return res.status(404).json({ error: 'Queue entry not found' });
+    entry.status = 'arrived';
+    entry.arrived_at = new Date().toISOString();
+    _pushAnnouncement(entry.branch_id, `✅ ${entry.number} has arrived at ${q.offices.get(entry.office_id)?.name || 'Office'}.`);
+    res.json({ success: true, entry });
+});
+
+app.post('/api/queue/:id/complete', auth, (req, res) => {
+    const q = _getQueue(req.user.branch_id || 'default');
+    const entry = q.entries.get(req.params.id);
+    if (!entry) return res.status(404).json({ error: 'Queue entry not found' });
+    entry.status = 'completed';
+    entry.completed_at = new Date().toISOString();
+    res.json({ success: true, entry });
+});
+
+app.get('/api/patient/my-queue', auth, async (req, res) => {
+    if (req.user.role !== 'patient') return res.status(403).json({ error: 'Forbidden' });
+    try {
+        const { data: me } = await supabase.from('patients').select('id, visit_type, branch_id').eq('created_by', req.user.id).maybeSingle();
+        if (!me) return res.json({ in_queue: false, position: null, total: 0 });
+
+        const branchId = me.branch_id || 'default';
+        const q = _getQueue(branchId);
+        
+        const activeEntries = Array.from(q.entries.values())
+            .filter(e => e.patient_id === me.id && !['completed', 'cancelled'].includes(e.status))
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        if (activeEntries.length > 0) {
+            const myTicket = activeEntries[0];
+            const ahead = Array.from(q.entries.values()).filter(e =>
+                e.status === 'waiting' &&
+                e.department === myTicket.department &&
+                new Date(e.created_at) < new Date(myTicket.created_at)
+            ).length;
+
+            const office = q.offices.get(myTicket.office_id);
+            const isYourTurn = myTicket.status === 'called' || myTicket.status === 'arrived';
+            
+            let avgTime = myTicket.department === 'Emergency' ? 5 : 10;
+            const eta = Math.max(0, ahead * avgTime);
+
+            return res.json({
+                in_queue: true,
+                number: myTicket.number,
+                position: ahead + 1,
+                ahead: ahead,
+                office: office ? office.name : 'Assigned Desk',
+                department: myTicket.department,
+                visit_type: myTicket.visit_type,
+                status: myTicket.status,
+                is_your_turn: isYourTurn,
+                eta_minutes: eta
+            });
+        }
+        res.json({ in_queue: false, position: null, total: 0 });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ============================================================
+// TRIAGE FLAGGING
+// ============================================================
+const TRIAGE_CHECKLIST = [
+    { id: 'chest_pain', label: 'Chest pain / tightness', severity: 'high', warning: true },
+    { id: 'severe_bleeding', label: 'Severe bleeding', severity: 'critical', warning: true },
+    { id: 'difficulty_breathing', label: 'Difficulty breathing / shortness of breath', severity: 'critical', warning: true },
+    { id: 'unconscious', label: 'Loss of consciousness / fainting', severity: 'critical', warning: true },
+    { id: 'severe_headache', label: 'Severe sudden headache', severity: 'high', warning: true },
+    { id: 'high_fever', label: 'High fever (≥ 39.5°C) in adult', severity: 'medium', warning: true },
+    { id: 'seizure', label: 'Seizure / convulsions', severity: 'critical', warning: true },
+    { id: 'stroke_signs', label: 'Sudden weakness / slurred speech (stroke)', severity: 'critical', warning: true }
+];
+
+app.get('/api/triage/checklist', auth, (req, res) => res.json(TRIAGE_CHECKLIST));
+
+app.post('/api/triage/flag', auth, (req, res) => {
+    const { patient_id, patient_name, symptoms, vitals, checklist_ids, notes } = req.body;
+    if (!patient_id) return res.status(400).json({ error: 'patient_id required' });
+    const ids = Array.isArray(checklist_ids) ? checklist_ids : [];
+    const matched = TRIAGE_CHECKLIST.filter(c => ids.includes(c.id));
+    const hasWarning = matched.length > 0;
+    const highest = matched.some(m => m.severity === 'critical') ? 'critical'
+        : matched.some(m => m.severity === 'high') ? 'high' : 'medium';
+    const flag = {
+        id: `flag-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        patient_id, patient_name: patient_name || 'Patient',
+        symptoms: symptoms || '', vitals: vitals || {},
+        checklist_ids: ids, matched, has_warning: hasWarning,
+        severity: hasWarning ? highest : 'none',
+        notes: notes || '',
+        flagged_by: req.user.name, flagged_by_id: req.user.id,
+        branch_id: req.user.branch_id || 'default',
+        status: hasWarning ? 'needs_review' : 'cleared',
+        created_at: new Date().toISOString()
+    };
+    TRIAGE_FLAGS.set(flag.id, flag);
+    if (hasWarning) {
+        _pushAnnouncement(flag.branch_id, `🚨 URGENT FLAG: ${patient_name} — ${matched.map(m => m.label).join(', ')}. Immediate assessment required.`);
+    }
+    res.json({ success: true, flag });
+});
+
+app.get('/api/triage/flags', auth, (req, res) => {
+    const branchId = req.user.branch_id || 'default';
+    const list = Array.from(TRIAGE_FLAGS.values())
+        .filter(f => f.branch_id === branchId)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    res.json(list);
+});
+
+app.post('/api/triage/flags/:id/resolve', auth, (req, res) => {
+    const f = TRIAGE_FLAGS.get(req.params.id);
+    if (!f) return res.status(404).json({ error: 'Flag not found' });
+    f.status = 'resolved';
+    f.resolved_at = new Date().toISOString();
+    f.resolved_by = req.user.name;
+    f.resolution_note = req.body.note || '';
+    res.json({ success: true, flag: f });
+});
+
+app.post('/api/triage/flags/:id/override', auth, role('doctor', 'surgeon', 'gp', 'health_officer', 'branch_admin', 'admin', 'super_admin'), (req, res) => {
+    const f = TRIAGE_FLAGS.get(req.params.id);
+    if (!f) return res.status(404).json({ error: 'Flag not found' });
+    const override = {
+        id: `ovr-${Date.now()}`,
+        flag_id: f.id, patient_id: f.patient_id,
+        decided_by: req.user.name, decided_by_id: req.user.id, decided_role: req.user.role,
+        reason: req.body.reason || 'No reason provided',
+        created_at: new Date().toISOString()
+    };
+    TRIAGE_OVERRIDES.set(override.id, override);
+    f.status = 'overridden';
+    f.override = override;
+    res.json({ success: true, override });
+});
+
+app.get('/api/triage/overrides', auth, (req, res) => {
+    res.json(Array.from(TRIAGE_OVERRIDES.values()));
+});
+// ============================================================
+// MedConnect Ethiopia — server.js (Part 2 of 3)
+// ============================================================
+
+// ============================================================
+// TRANSLATION & AI
+// ============================================================
+app.get('/api/translate/languages', auth, (req, res) => {
+    res.json(['English', 'Amharic', 'Afaan Oromoo', 'Tigrinya', 'Somali'].map(name => ({ name })));
+});
+
+app.post('/api/translate', auth, async (req, res) => {
+    try {
+        const { text, targetLang, sourceLang } = req.body;
+        if (!text || !text.trim()) return res.json({ translatedText: '' });
+        const langMap = { 'English': 'en', 'Amharic': 'am', 'Afaan Oromoo': 'om', 'Tigrinya': 'ti', 'Somali': 'so' };
+        const target = langMap[targetLang] || 'am';
+        const source = sourceLang ? (langMap[sourceLang] || 'auto') : 'auto';
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${source}&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
+        const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        if (!response.ok) throw new Error('Google Translate API error');
+        const data = await response.json();
+        if (data && data[0] && data[0][0] && data[0][0][0]) {
+            const translatedText = data[0].map(item => item[0]).join('');
+            return res.json({ translatedText });
+        }
+        throw new Error('Translation failed');
+    } catch (error) { res.status(500).json({ error: 'Translation failed' }); }
+});
+
+app.post('/api/ai', auth, async (req, res) => {
+    try {
+        const { prompt, lang } = req.body;
+        if (!prompt) return res.status(400).json({ error: 'Prompt required' });
+        const systemPrompt = `You are MedConnect AI, an advanced medical and system assistant.
+        The user is speaking in ${lang || 'English'}. You MUST reply strictly in ${lang || 'English'}.
+        If the user describes symptoms, provide a detailed analysis of possible conditions, what they should do, and a medical disclaimer.`;
+        let aiText = '';
+        try {
+            const response = await fetch('https://text.pollinations.ai/', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: prompt }], model: 'openai' })
+            });
+            if (response.ok) aiText = await response.text();
+        } catch (e) { console.log('Pollinations failed, trying fallback...'); }
+        if (!aiText || aiText.includes('error')) {
+            const p = prompt.toLowerCase();
+            if (p.includes('cancer') || p.includes('tumor')) {
+                aiText = `I am very sorry to hear that you are dealing with a cancer diagnosis. Cancer is a complex group of diseases, and treatment depends heavily on the specific type and stage. Please ensure you are working closely with an oncologist.`;
+            } else if (p.includes('fever') || p.includes('headache') || p.includes('pain')) {
+                aiText = `I understand you are not feeling well. Symptoms like fever and headache can be caused by many conditions. I recommend resting, staying hydrated, and monitoring your temperature. If symptoms persist for more than 48 hours, please book an appointment.`;
+            } else {
+                aiText = `I am here to help. You mentioned: "${prompt}". If you are experiencing medical symptoms, please describe them in detail so I can provide better guidance.`;
+            }
+        }
+        res.json({ text: aiText });
+    } catch (error) { res.status(500).json({ error: 'Failed to process AI request' }); }
+});
+
+// ============================================================
+// DIRECT WEBRTC CALLS (MESSAGES)
+// ============================================================
+const CALL_SIGNALS = [];
+let callSeq = 0;
+
+function pushCallSignal(from, to, type, payload) {
+    callSeq += 1;
+    CALL_SIGNALS.push({ seq: callSeq, from, to, type, payload, at: Date.now() });
+    const cutoff = Date.now() - 60_000;
+    const filtered = CALL_SIGNALS.filter(s => s.at > cutoff);
+    CALL_SIGNALS.length = 0;
+    CALL_SIGNALS.push(...filtered);
+}
+
+app.post('/api/call/signal', auth, async (req, res) => {
+    try {
+        const { to, type, payload } = req.body;
+        if (!to || !type) return res.status(400).json({ error: 'to and type required' });
+        pushCallSignal(req.user.id, to, type, payload || {});
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/call/signal', auth, async (req, res) => {
+    try {
+        const since = parseInt(req.query.since || '0', 10);
+        const mine = CALL_SIGNALS.filter(s => s.seq > since && (s.to === req.user.id || s.from === req.user.id));
+        const lastSeq = CALL_SIGNALS.length ? CALL_SIGNALS[CALL_SIGNALS.length - 1].seq : since;
+        res.json({ signals: mine, lastSeq });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ============================================================
+// LIVE CONFERENCE (GROUP CALLS)
+// ============================================================
+const LIVE = { 
+    active: false, startedAt: null, moderators: new Set(), 
+    participants: new Map(), requests: new Map(), signals: [], seq: 0 
+};
+
+function pushSignal(from, to, type, payload) {
+    LIVE.seq += 1;
+    LIVE.signals.push({ seq: LIVE.seq, from, to, type, payload, at: Date.now() });
+    const cutoff = Date.now() - 90_000;
+    LIVE.signals = LIVE.signals.filter(s => s.at > cutoff).slice(-500);
+}
+
+const LIVE_GUARDS = ['admin', 'super_admin', 'branch_admin'];
+const isLiveMod = (user) => LIVE_GUARDS.includes(user.role) || LIVE.moderators.has(user.id);
+
+app.post('/api/live/toggle', auth, role(...LIVE_GUARDS), async (req, res) => {
+    try {
+        const on = !!req.body.on;
+        if (on) { 
+            LIVE.active = true; LIVE.startedAt = new Date().toISOString(); LIVE.moderators.add(req.user.id); 
+        } else { 
+            LIVE.active = false; LIVE.startedAt = null; LIVE.moderators.clear(); 
+            LIVE.participants.clear(); LIVE.requests.clear(); LIVE.signals = []; 
+        }
+        pushSignal('system', '*', on ? 'live-on' : 'live-off', {});
+        res.json({ success: true, active: LIVE.active });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/live/grant-moderator', auth, async (req, res) => {
+    try {
+        if (!isLiveMod(req.user)) return res.status(403).json({ error: 'Only moderators can promote' });
+        const { userId } = req.body;
+        LIVE.moderators.add(userId);
+        pushSignal('system', userId, 'granted-mod', { by: req.user.id });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/live/participant-status', auth, async (req, res) => {
+    try {
+        const { muted, cameraOff, handRaised } = req.body;
+        const p = LIVE.participants.get(req.user.id);
+        if (p) {
+            if (muted !== undefined) p.muted = muted;
+            if (cameraOff !== undefined) p.cameraOff = cameraOff;
+            if (handRaised !== undefined) p.handRaised = handRaised;
+            pushSignal(req.user.id, '*', 'status-update', { id: req.user.id, muted: p.muted, cameraOff: p.cameraOff, handRaised: p.handRaised });
+        }
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/live/status', auth, async (req, res) => {
+    try {
+        const myRequest = LIVE.requests.get(req.user.id) || null;
+        const me = LIVE.participants.get(req.user.id) || null;
+        const amMod = isLiveMod(req.user);
+        let moderator = null;
+        if (LIVE.moderators.size) {
+            const firstModId = Array.from(LIVE.moderators)[0];
+            const { data } = await supabase.from('profiles').select('id, full_name, role, avatar_url').eq('id', firstModId).maybeSingle();
+            moderator = data || null;
+        }
+        res.json({
+            active: LIVE.active, startedAt: LIVE.startedAt, participantCount: LIVE.participants.size,
+            participants: Array.from(LIVE.participants.values()), myRequest,
+            iAmParticipant: !!me, iAmModerator: amMod, moderator, moderatorCount: LIVE.moderators.size
+        });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/live/request', auth, async (req, res) => {
+    try {
+        if (!LIVE.active) return res.status(400).json({ error: 'Live conference is not active' });
+        if (LIVE.moderators.has(req.user.id)) return res.status(400).json({ error: 'You are a moderator' });
+        LIVE.requests.set(req.user.id, {
+            id: req.user.id, name: req.user.name, role: req.user.role, staff_id: req.user.staff_id,
+            lang: req.body.lang || 'English', requestedAt: new Date().toISOString(), status: 'pending'
+        });
+        pushSignal('system', '*', 'new-request', { userId: req.user.id, name: req.user.name });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/live/requests', auth, async (req, res) => {
+    try {
+        if (!isLiveMod(req.user)) return res.status(403).json({ error: 'Not a moderator' });
+        res.json({
+            active: LIVE.active, requests: Array.from(LIVE.requests.values()).filter(r => r.status === 'pending'),
+            participants: Array.from(LIVE.participants.values()), moderators: Array.from(LIVE.moderators)
+        });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/live/requests/:userId/:action', auth, async (req, res) => {
+    try {
+        if (!isLiveMod(req.user)) return res.status(403).json({ error: 'Not a moderator' });
+        const { userId, action } = req.params;
+        const reqObj = LIVE.requests.get(userId);
+        if (!reqObj) return res.status(404).json({ error: 'Request not found' });
+        if (action === 'approve') {
+            reqObj.status = 'approved';
+            LIVE.participants.set(userId, { id: userId, name: reqObj.name, role: reqObj.role, lang: reqObj.lang, joinedAt: new Date().toISOString(), muted: false, cameraOff: false, handRaised: false });
+            pushSignal('system', userId, 'approved', { by: req.user.id });
+        } else {
+            reqObj.status = 'rejected'; LIVE.requests.delete(userId);
+            pushSignal('system', userId, 'rejected', { by: req.user.id });
+        }
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/live/leave', auth, async (req, res) => {
+    try {
+        LIVE.participants.delete(req.user.id); LIVE.requests.delete(req.user.id);
+        pushSignal(req.user.id, '*', 'participant-left', { userId: req.user.id });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/live/signal', auth, async (req, res) => {
+    try {
+        const { to, type, payload } = req.body;
+        if (!to || !type) return res.status(400).json({ error: 'to and type required' });
+        pushSignal(req.user.id, to, type, payload || {});
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/live/signal', auth, async (req, res) => {
+    try {
+        const since = parseInt(req.query.since || '0', 10);
+        const mine = LIVE.signals.filter(s => s.seq > since && (s.to === req.user.id || s.to === '*' || s.from === req.user.id));
+        const lastSeq = LIVE.signals.length ? LIVE.signals[LIVE.signals.length - 1].seq : since;
+        res.json({ signals: mine, lastSeq });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ============================================================
+// FEATURE 3: PATIENT JOURNEY TRACKER (With Auto-Routing)
+// ============================================================
+app.get('/api/journey/stages', auth, (req, res) => res.json(JOURNEY_STAGES));
+
+app.get('/api/journey/:patientId', auth, (req, res) => {
+    const j = _getJourney(req.params.patientId);
+    const stageIndex = JOURNEY_STAGES.indexOf(j.stage);
+    const nextStage = stageIndex >= 0 && stageIndex < JOURNEY_STAGES.length - 1 ? JOURNEY_STAGES[stageIndex + 1] : null;
+    res.json({ ...j, next_stage: nextStage, all_stages: JOURNEY_STAGES });
+});
+
+app.post('/api/journey/:patientId/advance', auth, (req, res) => {
+    const j = _getJourney(req.params.patientId);
+    const { stage } = req.body;
+    const target = stage || JOURNEY_STAGES[JOURNEY_STAGES.indexOf(j.stage) + 1];
+    
+    if (!target || !JOURNEY_STAGES.includes(target)) return res.status(400).json({ error: 'Invalid stage' });
+    
+    j.stage = target;
+    j.updated_at = new Date().toISOString();
+    j.history.push({ stage: target, at: j.updated_at, by: req.user.name });
+
+    // DYNAMIC QUEUE ROUTING (Close old ticket, create new ticket)
+    const branchId = req.user.branch_id || 'default';
+    const q = _getQueue(branchId);
+    
+    for (let entry of q.entries.values()) {
+        if (entry.patient_id === req.params.patientId && !['completed', 'cancelled'].includes(entry.status)) {
+            entry.status = 'completed';
+        }
+    }
+
+    let assignedOfficeId = null;
+    let deptName = 'General';
+
+    if (target === 'Laboratory') { assignedOfficeId = 'office-lab'; deptName = 'Laboratory'; }
+    else if (target === 'Pharmacy') { assignedOfficeId = 'office-pharmacy'; deptName = 'Pharmacy'; }
+    else if (target === 'With clinician') { assignedOfficeId = 'office-doctor-1'; deptName = 'Clinical'; }
+    else if (target === 'Emergency') { assignedOfficeId = 'office-emergency'; deptName = 'Emergency'; }
+    else if (target === 'Waiting') { assignedOfficeId = 'office-reception'; deptName = 'Reception'; }
+
+    if (assignedOfficeId) {
+        q.seq += 1;
+        const prefix = deptName === 'Emergency' ? 'E' : 'A';
+        
+        const newEntry = {
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            number: _mkQueueNumber(prefix, q.seq),
+            patient_id: req.params.patientId,
+            patient_name: req.body.patient_name || j.patient_name || 'Patient',
+            department: deptName,
+            office_id: assignedOfficeId,
+            visit_type: deptName === 'Emergency' ? 'Emergency' : 'Follow-up',
+            status: 'waiting',
+            created_at: new Date().toISOString(),
+            created_by: req.user.id,
+            branch_id: branchId
+        };
+        q.entries.set(newEntry.id, newEntry);
+        _pushAnnouncement(branchId, `🔄 ${newEntry.patient_name} moved to ${deptName}. Ticket: ${newEntry.number}`);
+    }
+
+    res.json({ success: true, journey: j });
+});
+
+app.get('/api/journey/dashboard', auth, (req, res) => {
+    const now = Date.now();
+    const all = Array.from(JOURNEYS.values());
+    const longWaiting = all.filter(j => j.stage === 'Waiting' && (now - new Date(j.updated_at).getTime()) > 30 * 60 * 1000);
+    const byStage = {};
+    for (const s of JOURNEY_STAGES) byStage[s] = all.filter(j => j.stage === s).length;
+    res.json({ total: all.length, by_stage: byStage, long_waiting: longWaiting });
+});
+
+// ============================================================
+// FEATURE 4: LAB-RESULT TRACKING & PING-PONG ROUTING
+// ============================================================
+const LAB_STATUSES = ['ordered', 'collected', 'processing', 'ready'];
+const LAB_ALERTS = [];
+
+app.get('/api/lab-statuses', auth, (req, res) => res.json(LAB_STATUSES));
+
+app.post('/api/lab-orders/:id/status', auth, role('lab_tech', 'radiologist', 'radiology_tech', 'admin', 'super_admin', 'branch_admin', 'doctor', 'nurse'), async (req, res) => {
+    try {
+        const { status, result_summary, patient_name } = req.body;
+        if (!LAB_STATUSES.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+        const { data: order, error } = await supabase.from('lab_orders').select('*').eq('id', req.params.id).single();
+        if (error || !order) return res.status(404).json({ error: 'Order not found' });
+        
+        const update = { status, updated_at: new Date().toISOString() };
+        if (status === 'ready') {
+            update.result_at = new Date().toISOString();
+            update.result_summary = result_summary || 'Result ready';
+            update.reviewed = false;
+        }
+        const { data, error: uErr } = await supabase.from('lab_orders').update(update).eq('id', req.params.id).select().single();
+        if (uErr) throw uErr;
+        
+        if (status === 'ready') {
+            LAB_ALERTS.push({
+                id: `lab-alert-${Date.now()}`,
+                order_id: order.id, patient_id: order.patient_id,
+                ordered_by: order.ordered_by, test_name: order.test_name,
+                message: 'Result ready for review',
+                created_at: new Date().toISOString(), reviewed: false
+            });
+            _pushAnnouncement(req.user.branch_id || 'default', `🧪 Lab result READY. Clinician notified (private).`);
+
+            // LAB PING-PONG: Auto-route patient back to Doctor's queue
+            const q = _getQueue(req.user.branch_id || 'default');
+            q.seq += 1;
+            const returnTicket = {
+                id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                number: _mkQueueNumber('R', q.seq),
+                patient_id: order.patient_id,
+                patient_name: patient_name || 'Patient', 
+                department: 'Clinical',
+                office_id: 'office-doctor-1',
+                visit_type: 'Lab Result Review',
+                status: 'waiting',
+                created_at: new Date().toISOString()
+            };
+            q.entries.set(returnTicket.id, returnTicket);
+            _pushAnnouncement(req.user.branch_id, `🔄 ${returnTicket.patient_name} back to Doctor for result review. Ticket: ${returnTicket.number}`);
+        }
+        res.json({ success: true, order: data });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/lab-orders/:id/review', auth, async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('lab_orders').update({
+            reviewed: true, reviewed_by: req.user.id, reviewed_at: new Date().toISOString()
+        }).eq('id', req.params.id).select().single();
+        if (error) throw error;
+        for (const a of LAB_ALERTS) if (a.order_id === req.params.id) a.reviewed = true;
+        res.json({ success: true, order: data });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/lab-alerts', auth, (req, res) => {
+    res.json(LAB_ALERTS.filter(a => !a.reviewed).slice(-50));
+});
+
+// ============================================================
+// FEATURE 5 & 6: FOLLOW-UP REMINDERS
+// ============================================================
+const FOLLOWUPS = new Map();
+const CONTRACEPTIVE_METHODS = [
+    { code: 'pill', name: 'Combined oral contraceptive pill', default_days: 28, note: 'Monthly refill' },
+    { code: 'injectable', name: 'Injectable (DMPA)', default_days: 90, note: 'Every 3 months' },
+    { code: 'implant', name: 'Implant', default_days: 1095, note: 'Every 3 years (clinician confirm)' },
+    { code: 'iud', name: 'IUD', default_days: 1825, note: 'Every 5 years (clinician confirm)' },
+    { code: 'condom', name: 'Condoms', default_days: 30, note: 'Resupply' },
+    { code: 'other', name: 'Other (clinician confirmed)', default_days: null, note: 'Clinician must set date' }
+];
+
+app.get('/api/followup/methods', auth, (req, res) => res.json(CONTRACEPTIVE_METHODS));
+
+app.post('/api/followup', auth, (req, res) => {
+    try {
+        const { patient_id, patient_name, type, method_code, clinician_confirmed_date, purpose, contact_channel, channel_verified, contact_address } = req.body;
+        if (!patient_id) return res.status(400).json({ error: 'patient_id required' });
+        const typeNorm = type === 'contraceptive' ? 'contraceptive' : 'general';
+        let due_date = clinician_confirmed_date;
+        if (typeNorm === 'contraceptive') {
+            if (!clinician_confirmed_date) return res.status(400).json({ error: 'Clinician must confirm the return date for contraceptive follow-up' });
+            due_date = clinician_confirmed_date;
+        }
+        if (!due_date) return res.status(400).json({ error: 'Follow-up date required' });
+        const item = {
+            id: `fu-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            patient_id, patient_name: patient_name || 'Patient',
+            type: typeNorm, method_code: method_code || null,
+            method_label: method_code ? (CONTRACEPTIVE_METHODS.find(m => m.code === method_code)?.name || method_code) : null,
+            purpose: purpose || '', due_date, clinician_confirmed: true,
+            clinician_id: req.user.id, clinician_name: req.user.name,
+            contact_channel: contact_channel || 'app', contact_address: contact_address || null,
+            channel_verified: !!channel_verified,
+            status: 'scheduled', reminder_history: [],
+            branch_id: req.user.branch_id || 'default',
+            created_at: new Date().toISOString()
+        };
+        FOLLOWUPS.set(item.id, item);
+        res.json({ success: true, followup: item });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/followup', auth, (req, res) => {
+    const branchId = req.user.branch_id || 'default';
+    const all = Array.from(FOLLOWUPS.values()).filter(f => f.branch_id === branchId);
+    const now = Date.now();
+    for (const f of all) {
+        if (f.status === 'scheduled' && new Date(f.due_date).getTime() < now) f.status = 'overdue';
+    }
+    res.json(all.sort((a, b) => new Date(a.due_date) - new Date(b.due_date)));
+});
+
+app.get('/api/followup/due', auth, (req, res) => {
+    const branchId = req.user.branch_id || 'default';
+    const now = new Date();
+    const all = Array.from(FOLLOWUPS.values()).filter(f => f.branch_id === branchId);
+    const due = all.filter(f => {
+        const d = new Date(f.due_date);
+        const diff = d.getTime() - now.getTime();
+        return diff <= 3 * 24 * 60 * 60 * 1000;
+    });
+    res.json(due);
+});
+
+app.post('/api/followup/:id/send-reminder', auth, (req, res) => {
+    const f = FOLLOWUPS.get(req.params.id);
+    if (!f) return res.status(404).json({ error: 'Follow-up not found' });
+    if (!f.channel_verified) return res.status(400).json({ error: 'Contact channel not verified' });
+    const entry = { at: new Date().toISOString(), by: req.user.name, channel: f.contact_channel, status: 'sent' };
+    f.reminder_history.push(entry);
+    f.status = 'sent';
+    _pushAnnouncement(f.branch_id, `📩 Discreet reminder sent (${f.contact_channel}) — no sensitive details disclosed.`);
+    res.json({ success: true, followup: f });
+});
+
+app.post('/api/followup/:id/outcome', auth, (req, res) => {
+    const f = FOLLOWUPS.get(req.params.id);
+    if (!f) return res.status(404).json({ error: 'Follow-up not found' });
+    const { returned, note, next_due_date } = req.body;
+    f.status = returned ? 'returned' : 'overdue';
+    f.outcome_note = note || '';
+    f.outcome_at = new Date().toISOString();
+    f.outcome_by = req.user.name;
+    if (next_due_date) {
+        const next = { ...f, id: `fu-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, due_date: next_due_date, status: 'scheduled', reminder_history: [], created_at: new Date().toISOString(), outcome_note: null, outcome_at: null };
+        FOLLOWUPS.set(next.id, next);
+    }
+    res.json({ success: true, followup: f });
+});
+
+app.get('/api/followup/dashboard', auth, (req, res) => {
+    const branchId = req.user.branch_id || 'default';
+    const all = Array.from(FOLLOWUPS.values()).filter(f => f.branch_id === branchId);
+    res.json({
+        total: all.length,
+        scheduled: all.filter(f => f.status === 'scheduled').length,
+        sent: all.filter(f => f.status === 'sent').length,
+        delivered: all.filter(f => f.status === 'delivered').length,
+        failed: all.filter(f => f.status === 'failed').length,
+        overdue: all.filter(f => f.status === 'overdue').length,
+        returned: all.filter(f => f.status === 'returned').length
+    });
+});
+
+// ============================================================
+// FEATURE 7: MEDICINE STOCK & EXPIRY ALERTS
+// ============================================================
+const STOCK_ITEMS = new Map();
+const STOCK_ALERTS = new Map();
+
+const DEMO_STOCK = [
+    { item_name: 'Paracetamol 500mg', quantity: 450, unit: 'tablets', reorder_level: 100, expiry_date: '2027-06-30', batch: 'PAR-2024-A' },
+    { item_name: 'Amoxicillin 250mg', quantity: 22, unit: 'capsules', reorder_level: 50, expiry_date: '2026-03-15', batch: 'AMX-2024-C' },
+    { item_name: 'ORS sachets', quantity: 8, unit: 'sachets', reorder_level: 30, expiry_date: '2026-01-10', batch: 'ORS-2024-B' },
+    { item_name: 'Insulin (rapid)', quantity: 12, unit: 'vials', reorder_level: 10, expiry_date: '2026-02-28', batch: 'INS-2024-X' },
+    { item_name: 'Ibuprofen 400mg', quantity: 180, unit: 'tablets', reorder_level: 80, expiry_date: '2027-12-31', batch: 'IBU-2024-D' },
+    { item_name: 'Morphine 10mg/mL', quantity: 5, unit: 'amps', reorder_level: 10, expiry_date: '2026-04-20', batch: 'MOR-2024-E' }
+];
+
+for (const s of DEMO_STOCK) {
+    const id = `stock-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    STOCK_ITEMS.set(id, {
+        id, ...s, quantity: Number(s.quantity), reorder_level: Number(s.reorder_level),
+        branch_id: 'default', created_at: new Date().toISOString()
+    });
+}
+
+function _computeStockStatus(item) {
+    const today = new Date();
+    const expiry = new Date(item.expiry_date);
+    const daysToExpiry = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+    const lowStock = item.quantity <= item.reorder_level;
+    const nearExpiry = daysToExpiry <= 90;
+    const expired = daysToExpiry < 0;
+    return { lowStock, nearExpiry, expired, daysToExpiry };
+}
+
+app.get('/api/stock', auth, (req, res) => {
+    const branchId = req.user.branch_id || 'default';
+    const items = Array.from(STOCK_ITEMS.values()).filter(i => i.branch_id === branchId)
+        .map(i => ({ ...i, ..._computeStockStatus(i) }));
+    res.json(items);
+});
+
+app.post('/api/stock', auth, role('pharmacist', 'pharmacy_tech', 'medical_supply_officer', 'admin', 'super_admin', 'branch_admin'), (req, res) => {
+    const { item_name, quantity, unit, reorder_level, expiry_date, batch } = req.body;
+    if (!item_name) return res.status(400).json({ error: 'item_name required' });
+    const id = `stock-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const item = {
+        id, item_name, quantity: Number(quantity) || 0, unit: unit || 'units',
+        reorder_level: Number(reorder_level) || 10,
+        expiry_date: expiry_date || null, batch: batch || null,
+        branch_id: req.user.branch_id || 'default', created_at: new Date().toISOString()
+    };
+    STOCK_ITEMS.set(id, item);
+    _evaluateStockAlerts(item);
+    res.json({ success: true, item });
+});
+
+app.post('/api/stock/:id/adjust', auth, role('pharmacist', 'pharmacy_tech', 'medical_supply_officer', 'admin', 'super_admin', 'branch_admin'), (req, res) => {
+    const item = STOCK_ITEMS.get(req.params.id);
+    if (!item) return res.status(404).json({ error: 'Stock item not found' });
+    item.quantity = Math.max(0, item.quantity + Number(req.body.delta || 0));
+    _evaluateStockAlerts(item);
+    res.json({ success: true, item: { ...item, ..._computeStockStatus(item) } });
+});
+
+function _evaluateStockAlerts(item) {
+    const s = _computeStockStatus(item);
+    const key = (type) => `${item.id}-${type}`;
+    if (s.lowStock && !STOCK_ALERTS.has(key('low'))) {
+        STOCK_ALERTS.set(key('low'), { id: key('low'), item_id: item.id, item_name: item.item_name, type: 'low_stock', message: `${item.item_name} is LOW (${item.quantity} ${item.unit}, reorder at ${item.reorder_level})`, branch_id: item.branch_id, created_at: new Date().toISOString(), acknowledged: false });
+    }
+    if (s.nearExpiry && !s.expired && !STOCK_ALERTS.has(key('expiry'))) {
+        STOCK_ALERTS.set(key('expiry'), { id: key('expiry'), item_id: item.id, item_name: item.item_name, type: 'near_expiry', message: `${item.item_name} expires in ${s.daysToExpiry} days`, branch_id: item.branch_id, created_at: new Date().toISOString(), acknowledged: false });
+    }
+    if (s.expired && !STOCK_ALERTS.has(key('expired'))) {
+        STOCK_ALERTS.set(key('expired'), { id: key('expired'), item_id: item.id, item_name: item.item_name, type: 'expired', message: `${item.item_name} EXPIRED on ${item.expiry_date}`, branch_id: item.branch_id, created_at: new Date().toISOString(), acknowledged: false });
+    }
+}
+
+for (const item of STOCK_ITEMS.values()) _evaluateStockAlerts(item);
+
+app.get('/api/stock/alerts', auth, (req, res) => {
+    const branchId = req.user.branch_id || 'default';
+    const alerts = Array.from(STOCK_ALERTS.values()).filter(a => a.branch_id === branchId && !a.acknowledged);
+    res.json(alerts);
+});
+
+app.post('/api/stock/alerts/:id/ack', auth, (req, res) => {
+    const a = STOCK_ALERTS.get(req.params.id);
+    if (!a) return res.status(404).json({ error: 'Alert not found' });
+    a.acknowledged = true;
+    a.acknowledged_by = req.user.name;
+    a.acknowledged_at = new Date().toISOString();
+    res.json({ success: true, alert: a });
+});
+
+// ============================================================
+// FEATURE 8: REFERRAL TRACKING
+// ============================================================
+const REFERRAL_STAGES = ['sent', 'accepted', 'completed', 'returned'];
+const REFERRALS = new Map();
+
+app.get('/api/referral/stages', auth, (req, res) => res.json(REFERRAL_STAGES));
+
+app.post('/api/referral/track', auth, (req, res) => {
+    try {
+        const { patient_id, patient_name, destination_facility, reason, urgency, notes } = req.body;
+        if (!patient_id || !destination_facility) return res.status(400).json({ error: 'patient_id and destination_facility required' });
+        const ref = {
+            id: `ref-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            patient_id, patient_name: patient_name || 'Patient',
+            destination_facility, reason: reason || '', urgency: urgency || 'routine',
+            notes: notes || '', status: 'sent', sent_at: new Date().toISOString(),
+            sent_by: req.user.name, sent_by_id: req.user.id,
+            branch_id: req.user.branch_id || 'default',
+            history: [{ status: 'sent', at: new Date().toISOString(), by: req.user.name }]
+        };
+        REFERRALS.set(ref.id, ref);
+        res.json({ success: true, referral: ref });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/referral/track', auth, (req, res) => {
+    const branchId = req.user.branch_id || 'default';
+    res.json(Array.from(REFERRALS.values()).filter(r => r.branch_id === branchId)
+        .sort((a, b) => new Date(b.sent_at) - new Date(a.sent_at)));
+});
+
+app.post('/api/referral/track/:id/update', auth, (req, res) => {
+    const ref = REFERRALS.get(req.params.id);
+    if (!ref) return res.status(404).json({ error: 'Referral not found' });
+    const { status, note } = req.body;
+    if (!REFERRAL_STAGES.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+    ref.status = status;
+    ref.history.push({ status, at: new Date().toISOString(), by: req.user.name, note: note || '' });
+    res.json({ success: true, referral: ref });
+});
+
+app.get('/api/referral/dashboard', auth, (req, res) => {
+    const branchId = req.user.branch_id || 'default';
+    const all = Array.from(REFERRALS.values()).filter(r => r.branch_id === branchId);
+    res.json({
+        total: all.length,
+        sent: all.filter(r => r.status === 'sent').length,
+        accepted: all.filter(r => r.status === 'accepted').length,
+        completed: all.filter(r => r.status === 'completed').length,
+        needs_followup: all.filter(r => r.status === 'sent' || r.status === 'accepted').length
+    });
+});
+
+// ============================================================
+// FEATURE 9: CLINICIAN HANDOVER SUMMARY
+// ============================================================
+app.post('/api/handover', auth, async (req, res) => {
+    try {
+        const { patient_id } = req.body;
+        if (!patient_id) return res.status(400).json({ error: 'patient_id required' });
+        const [patientRes, apptsRes, labRes, rxRes] = await Promise.all([
+            supabase.from('patients').select('*').eq('id', patient_id).maybeSingle(),
+            supabase.from('appointments').select('*').eq('patient_id', patient_id).order('scheduled_at', { ascending: false }).limit(5),
+            supabase.from('lab_orders').select('*').eq('patient_id', patient_id).order('created_at', { ascending: false }).limit(5),
+            supabase.from('prescriptions').select('*').eq('patient_id', patient_id).order('created_at', { ascending: false }).limit(5)
+        ]);
+        const patient = patientRes.data;
+        if (!patient) return res.status(404).json({ error: 'Patient not found' });
+        const missing = [];
+        const summary = {
+            id: `ho-${Date.now()}`,
+            patient_id, patient_name: patient.full_name, mrn: patient.mrn,
+            visit_type: patient.visit_type, symptoms: patient.symptoms || null,
+            vitals: patient.vitals || null, allergies: patient.allergies || null,
+            appointments: apptsRes.data || [], lab_orders: labRes.data || [],
+            prescriptions: rxRes.data || [], next_steps: req.body.next_steps || [],
+            created_by: req.user.name, created_at: new Date().toISOString(),
+            reviewed_by: null, reviewed_at: null, status: 'draft'
+        };
+        if (!summary.symptoms) missing.push('symptoms');
+        if (!summary.vitals) missing.push('vital signs');
+        if (!summary.allergies) missing.push('allergies');
+        summary.missing_information = missing;
+        if (!global.__handovers) global.__handovers = new Map();
+        global.__handovers.set(summary.id, summary);
+        res.json({ success: true, summary });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/handover', auth, (req, res) => {
+    const list = global.__handovers ? Array.from(global.__handovers.values()) : [];
+    res.json(list);
+});
+
+app.post('/api/handover/:id/approve', auth, role('doctor', 'surgeon', 'gp', 'health_officer', 'admin', 'super_admin'), (req, res) => {
+    const list = global.__handovers ? Array.from(global.__handovers.values()) : [];
+    const h = list.find(x => x.id === req.params.id);
+    if (!h) return res.status(404).json({ error: 'Handover not found' });
+    h.status = 'approved';
+    h.reviewed_by = req.user.name;
+    h.reviewed_at = new Date().toISOString();
+    res.json({ success: true, summary: h });
+});
+
+// ============================================================
+// FEATURE 10: PATIENT INSTRUCTIONS IN LOCAL LANGUAGES
+// ============================================================
+const INSTRUCTIONS = new Map();
+const APPROVED_LANGS = ['English', 'Amharic', 'Afaan Oromoo', 'Tigrinya', 'Somali'];
+
+app.post('/api/instructions', auth, (req, res) => {
+    try {
+        const { patient_id, patient_name, language, text, next_step } = req.body;
+        if (!patient_id || !language) return res.status(400).json({ error: 'patient_id and language required' });
+        if (!APPROVED_LANGS.includes(language)) return res.status(400).json({ error: 'Language not yet tested' });
+        const item = {
+            id: `inst-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            patient_id, patient_name: patient_name || 'Patient',
+            language, text: text || '', next_step: next_step || '',
+            reviewed_by: null, reviewed_at: null, status: 'draft',
+            created_by: req.user.name, branch_id: req.user.branch_id || 'default',
+            created_at: new Date().toISOString()
+        };
+        INSTRUCTIONS.set(item.id, item);
+        res.json({ success: true, instruction: item });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/instructions', auth, (req, res) => {
+    const branchId = req.user.branch_id || 'default';
+    res.json(Array.from(INSTRUCTIONS.values()).filter(i => i.branch_id === branchId));
+});
+
+app.post('/api/instructions/:id/approve', auth, (req, res) => {
+    const i = INSTRUCTIONS.get(req.params.id);
+    if (!i) return res.status(404).json({ error: 'Instruction not found' });
+    i.reviewed_by = req.user.name;
+    i.reviewed_at = new Date().toISOString();
+    i.status = 'approved';
+    res.json({ success: true, instruction: i });
+});
+
+// ============================================================
+// FEATURE 11: BRANCH WORKLOAD DASHBOARD
+// ============================================================
+app.get('/api/workload', auth, async (req, res) => {
+    try {
+        const branchId = req.user.branch_id || 'default';
+        const q = _getQueue(branchId);
+        const queueEntries = Array.from(q.entries.values()).filter(e => !['completed', 'cancelled'].includes(e.status));
+
+        const byOffice = {};
+        for (const office of q.offices.values()) {
+            byOffice[office.name] = queueEntries.filter(e => e.office_id === office.id).length;
+        }
+
+        const now = Date.now();
+        const waitingTimes = queueEntries
+            .filter(e => e.status === 'waiting')
+            .map(e => ({ number: e.number, name: e.patient_name, minutes: Math.floor((now - new Date(e.created_at).getTime()) / 60000) }));
+        const longestWait = waitingTimes.sort((a, b) => b.minutes - a.minutes).slice(0, 5);
+
+        const missedCalls = queueEntries.filter(e => e.status === 'missed').length;
+
+        let labAwaitingReview = 0;
+        try {
+            const { data } = await supabase.from('lab_orders').select('id, status, reviewed').eq('branch_id', req.user.branch_id);
+            labAwaitingReview = (data || []).filter(l => l.status === 'completed' && !l.reviewed).length;
+        } catch (_) {}
+
+        const followupsDue = Array.from(FOLLOWUPS.values())
+            .filter(f => f.branch_id === branchId)
+            .filter(f => new Date(f.due_date).getTime() - now <= 3 * 86400000).length;
+
+        const byDepartment = {};
+        for (const e of queueEntries) {
+            byDepartment[e.department] = (byDepartment[e.department] || 0) + 1;
+        }
+
+        res.json({
+            patients_waiting_by_office: byOffice,
+            longest_waiting_times: longestWait,
+            missed_calls: missedCalls,
+            lab_work_awaiting_review: labAwaitingReview,
+            followups_due: followupsDue,
+            workload_by_department: byDepartment,
+            generated_at: new Date().toISOString()
+        });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+// ============================================================
+// MedConnect Ethiopia — server.js (Part 3 of 3)
+// ============================================================
 
 // ============================================================
 // CLINICAL FEED & MESSAGES
@@ -404,250 +1456,6 @@ app.post('/api/messages/:id/react', auth, async (req, res) => {
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
-// ============================================================
-// MedConnect Ethiopia — server.js (Part 2 of 2)
-// ============================================================
-
-app.get('/api/translate/languages', auth, (req, res) => {
-    res.json(['English', 'Amharic', 'Afaan Oromoo', 'Tigrinya', 'Somali'].map(name => ({ name })));
-});
-
-app.post('/api/translate', auth, async (req, res) => {
-    try {
-        const { text, targetLang, sourceLang } = req.body;
-        if (!text || !text.trim()) return res.json({ translatedText: '' });
-        const langMap = { 'English': 'en', 'Amharic': 'am', 'Afaan Oromoo': 'om', 'Tigrinya': 'ti', 'Somali': 'so' };
-        const target = langMap[targetLang] || 'am';
-        const source = sourceLang ? (langMap[sourceLang] || 'auto') : 'auto';
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${source}&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
-        const response = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
-        if (!response.ok) throw new Error('Google Translate API error');
-        const data = await response.json();
-        if (data && data[0] && data[0][0] && data[0][0][0]) {
-            const translatedText = data[0].map(item => item[0]).join('');
-            return res.json({ translatedText });
-        }
-        throw new Error('Translation failed');
-    } catch (error) { res.status(500).json({ error: 'Translation failed' }); }
-});
-
-app.post('/api/ai', auth, async (req, res) => {
-    try {
-        const { prompt, lang } = req.body;
-        if (!prompt) return res.status(400).json({ error: 'Prompt required' });
-        const systemPrompt = `You are MedConnect AI, an advanced medical and system assistant.
-        The user is speaking in ${lang || 'English'}. You MUST reply strictly in ${lang || 'English'}.
-        If the user describes symptoms, provide a detailed analysis of possible conditions, what they should do, and a medical disclaimer.`;
-        let aiText = '';
-        try {
-            const response = await fetch('https://text.pollinations.ai/', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: prompt }], model: 'openai' })
-            });
-            if (response.ok) aiText = await response.text();
-        } catch (e) { console.log('Pollinations failed, trying fallback...'); }
-        if (!aiText || aiText.includes('error')) {
-            const p = prompt.toLowerCase();
-            if (p.includes('cancer') || p.includes('tumor')) {
-                aiText = `I am very sorry to hear that you are dealing with a cancer diagnosis. Cancer is a complex group of diseases, and treatment depends heavily on the specific type and stage. Please ensure you are working closely with an oncologist.`;
-            } else if (p.includes('fever') || p.includes('headache') || p.includes('pain')) {
-                aiText = `I understand you are not feeling well. Symptoms like fever and headache can be caused by many conditions. I recommend resting, staying hydrated, and monitoring your temperature. If symptoms persist for more than 48 hours, please book an appointment.`;
-            } else {
-                aiText = `I am here to help. You mentioned: "${prompt}". If you are experiencing medical symptoms, please describe them in detail so I can provide better guidance.`;
-            }
-        }
-        res.json({ text: aiText });
-    } catch (error) { res.status(500).json({ error: 'Failed to process AI request' }); }
-});
-
-// ============================================================
-// DIRECT WEBRTC CALLS (MESSAGES)
-// ============================================================
-const CALL_SIGNALS = []; // Stores direct call signals
-let callSeq = 0;
-
-function pushCallSignal(from, to, type, payload) {
-    callSeq += 1;
-    CALL_SIGNALS.push({ seq: callSeq, from, to, type, payload, at: Date.now() });
-    const cutoff = Date.now() - 60_000;
-    // Keep only last minute of signals
-    const filtered = CALL_SIGNALS.filter(s => s.at > cutoff);
-    CALL_SIGNALS.length = 0;
-    CALL_SIGNALS.push(...filtered);
-}
-
-app.post('/api/call/signal', auth, async (req, res) => {
-    try {
-        const { to, type, payload } = req.body;
-        if (!to || !type) return res.status(400).json({ error: 'to and type required' });
-        pushCallSignal(req.user.id, to, type, payload || {});
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.get('/api/call/signal', auth, async (req, res) => {
-    try {
-        const since = parseInt(req.query.since || '0', 10);
-        const mine = CALL_SIGNALS.filter(s => s.seq > since && (s.to === req.user.id || s.from === req.user.id));
-        const lastSeq = CALL_SIGNALS.length ? CALL_SIGNALS[CALL_SIGNALS.length - 1].seq : since;
-        res.json({ signals: mine, lastSeq });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// ============================================================
-// LIVE CONFERENCE (GROUP CALLS)
-// ============================================================
-// Added statuses for mute, camera, raise-hand, reactions
-const LIVE = { 
-    active: false, 
-    startedAt: null, 
-    moderators: new Set(), 
-    participants: new Map(), 
-    requests: new Map(), 
-    signals: [], 
-    seq: 0 
-};
-
-function pushSignal(from, to, type, payload) {
-    LIVE.seq += 1;
-    LIVE.signals.push({ seq: LIVE.seq, from, to, type, payload, at: Date.now() });
-    const cutoff = Date.now() - 90_000;
-    LIVE.signals = LIVE.signals.filter(s => s.at > cutoff).slice(-500);
-}
-
-const LIVE_GUARDS = ['admin', 'super_admin', 'branch_admin'];
-const isLiveMod = (user) => LIVE_GUARDS.includes(user.role) || LIVE.moderators.has(user.id);
-
-app.post('/api/live/toggle', auth, role(...LIVE_GUARDS), async (req, res) => {
-    try {
-        const on = !!req.body.on;
-        if (on) { 
-            LIVE.active = true; 
-            LIVE.startedAt = new Date().toISOString(); 
-            LIVE.moderators.add(req.user.id); 
-        } else { 
-            LIVE.active = false; 
-            LIVE.startedAt = null; 
-            LIVE.moderators.clear(); 
-            LIVE.participants.clear(); 
-            LIVE.requests.clear(); 
-            LIVE.signals = []; 
-        }
-        pushSignal('system', '*', on ? 'live-on' : 'live-off', {});
-        res.json({ success: true, active: LIVE.active });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.post('/api/live/grant-moderator', auth, async (req, res) => {
-    try {
-        if (!isLiveMod(req.user)) return res.status(403).json({ error: 'Only moderators can promote' });
-        const { userId } = req.body;
-        LIVE.moderators.add(userId);
-        pushSignal('system', userId, 'granted-mod', { by: req.user.id });
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// NEW: Toggle user status (mute, camera, raise hand)
-app.post('/api/live/participant-status', auth, async (req, res) => {
-    try {
-        const { muted, cameraOff, handRaised } = req.body;
-        const p = LIVE.participants.get(req.user.id);
-        if (p) {
-            if (muted !== undefined) p.muted = muted;
-            if (cameraOff !== undefined) p.cameraOff = cameraOff;
-            if (handRaised !== undefined) p.handRaised = handRaised;
-            pushSignal(req.user.id, '*', 'status-update', { id: req.user.id, muted: p.muted, cameraOff: p.cameraOff, handRaised: p.handRaised });
-        }
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.get('/api/live/status', auth, async (req, res) => {
-    try {
-        const myRequest = LIVE.requests.get(req.user.id) || null;
-        const me = LIVE.participants.get(req.user.id) || null;
-        const amMod = isLiveMod(req.user);
-        let moderator = null;
-        if (LIVE.moderators.size) {
-            const firstModId = Array.from(LIVE.moderators)[0];
-            const { data } = await supabase.from('profiles').select('id, full_name, role, avatar_url').eq('id', firstModId).maybeSingle();
-            moderator = data || null;
-        }
-        res.json({
-            active: LIVE.active, startedAt: LIVE.startedAt, participantCount: LIVE.participants.size,
-            participants: Array.from(LIVE.participants.values()), myRequest,
-            iAmParticipant: !!me, iAmModerator: amMod, moderator, moderatorCount: LIVE.moderators.size
-        });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.post('/api/live/request', auth, async (req, res) => {
-    try {
-        if (!LIVE.active) return res.status(400).json({ error: 'Live conference is not active' });
-        if (LIVE.moderators.has(req.user.id)) return res.status(400).json({ error: 'You are a moderator' });
-        LIVE.requests.set(req.user.id, {
-            id: req.user.id, name: req.user.name, role: req.user.role, staff_id: req.user.staff_id,
-            lang: req.body.lang || 'English', requestedAt: new Date().toISOString(), status: 'pending'
-        });
-        pushSignal('system', '*', 'new-request', { userId: req.user.id, name: req.user.name });
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.get('/api/live/requests', auth, async (req, res) => {
-    try {
-        if (!isLiveMod(req.user)) return res.status(403).json({ error: 'Not a moderator' });
-        res.json({
-            active: LIVE.active, requests: Array.from(LIVE.requests.values()).filter(r => r.status === 'pending'),
-            participants: Array.from(LIVE.participants.values()), moderators: Array.from(LIVE.moderators)
-        });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.post('/api/live/requests/:userId/:action', auth, async (req, res) => {
-    try {
-        if (!isLiveMod(req.user)) return res.status(403).json({ error: 'Not a moderator' });
-        const { userId, action } = req.params;
-        const reqObj = LIVE.requests.get(userId);
-        if (!reqObj) return res.status(404).json({ error: 'Request not found' });
-        if (action === 'approve') {
-            reqObj.status = 'approved';
-            LIVE.participants.set(userId, { id: userId, name: reqObj.name, role: reqObj.role, lang: reqObj.lang, joinedAt: new Date().toISOString(), muted: false, cameraOff: false, handRaised: false });
-            pushSignal('system', userId, 'approved', { by: req.user.id });
-        } else {
-            reqObj.status = 'rejected'; LIVE.requests.delete(userId);
-            pushSignal('system', userId, 'rejected', { by: req.user.id });
-        }
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.post('/api/live/leave', auth, async (req, res) => {
-    try {
-        LIVE.participants.delete(req.user.id); LIVE.requests.delete(req.user.id);
-        pushSignal(req.user.id, '*', 'participant-left', { userId: req.user.id });
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.post('/api/live/signal', auth, async (req, res) => {
-    try {
-        const { to, type, payload } = req.body;
-        if (!to || !type) return res.status(400).json({ error: 'to and type required' });
-        pushSignal(req.user.id, to, type, payload || {});
-        res.json({ success: true });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.get('/api/live/signal', auth, async (req, res) => {
-    try {
-        const since = parseInt(req.query.since || '0', 10);
-        const mine = LIVE.signals.filter(s => s.seq > since && (s.to === req.user.id || s.to === '*' || s.from === req.user.id));
-        const lastSeq = LIVE.signals.length ? LIVE.signals[LIVE.signals.length - 1].seq : since;
-        res.json({ signals: mine, lastSeq });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
 
 // ============================================================
 // WORKERS, PATIENTS, AND SYSTEM CRUD
@@ -720,36 +1528,6 @@ app.get('/api/patient/my-appointments', auth, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.get('/api/patient/my-queue', auth, async (req, res) => {
-    if (req.user.role !== 'patient') return res.status(403).json({ error: 'Forbidden' });
-    try {
-        const { data: me } = await supabase.from('patients').select('id, visit_type').eq('created_by', req.user.id).maybeSingle();
-        if (!me) return res.json({ position: null, total: 0, ahead: 0, currentlyServing: null });
-        
-        const start = new Date(); start.setHours(0,0,0,0); const end = new Date(start); end.setDate(end.getDate() + 1);
-        const { data: appts } = await supabase.from('appointments').select('id, patient_id, status, scheduled_at, visit_type').gte('scheduled_at', start.toISOString()).lt('scheduled_at', end.toISOString()).order('scheduled_at', { ascending: true });
-        
-        const sortedAppts = (appts || []).sort((a, b) => {
-            if (a.visit_type === 'Emergency' && b.visit_type !== 'Emergency') return -1;
-            if (b.visit_type === 'Emergency' && a.visit_type !== 'Emergency') return 1;
-            return new Date(a.scheduled_at) - new Date(b.scheduled_at);
-        });
-
-        const mine = sortedAppts.find(a => a.patient_id === me.id);
-        const idx = mine ? sortedAppts.findIndex(a => a.id === mine.id) : -1;
-        const serving = (sortedAppts || []).find(a => a.status === 'checked_in');
-        
-        res.json({ 
-            position: idx >= 0 ? idx + 1 : null, 
-            total: (sortedAppts || []).length, 
-            ahead: Math.max(0, idx), 
-            currentlyServing: serving ? { at: serving.scheduled_at, type: serving.visit_type } : null, 
-            myStatus: mine?.status || null,
-            myVisitType: mine?.visit_type || me.visit_type || 'First Time Check'
-        });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
 app.get('/api/patient/my-prescriptions', auth, async (req, res) => {
     if (req.user.role !== 'patient') return res.status(403).json({ error: 'Forbidden' });
     try {
@@ -770,6 +1548,17 @@ app.get('/api/patient/my-lab-orders', auth, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.get('/api/patient/appointment-reminders', auth, async (req, res) => {
+    if (req.user.role !== 'patient') return res.status(403).json({ error: 'Forbidden' });
+    try {
+        const { data: me } = await supabase.from('patients').select('id').eq('created_by', req.user.id).maybeSingle();
+        if (!me) return res.json({ reminders: [] });
+        const { data } = await supabase.from('appointments').select('*').eq('patient_id', me.id)
+            .gte('scheduled_at', new Date().toISOString()).order('scheduled_at', { ascending: true }).limit(5);
+        res.json({ reminders: data || [] });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/patients', auth, async (req, res) => {
     try {
         if (req.user.role === 'patient') return res.status(403).json({ error: 'Forbidden' });
@@ -787,13 +1576,9 @@ app.post('/api/patients', auth, async (req, res) => {
         if (!p.mrn) p.mrn = `MRN-${Date.now().toString().slice(-8)}`;
         
         const { data, error } = await supabase.from('patients').insert([{ 
-            full_name: p.full_name, 
-            mrn: p.mrn, 
-            phone: p.phone, 
-            gender: p.gender, 
+            full_name: p.full_name, mrn: p.mrn, phone: p.phone, gender: p.gender, 
             visit_type: p.visit_type || 'First Time Check',
-            branch_id: p.branch_id || req.user.branch_id, 
-            created_by: req.user.id 
+            branch_id: p.branch_id || req.user.branch_id, created_by: req.user.id 
         }]).select().single();
         
         if (error) throw error;
@@ -822,13 +1607,9 @@ app.post('/api/appointments', auth, async (req, res) => {
         if (req.user.role === 'patient') return res.status(403).json({ error: 'Forbidden' });
         const a = req.body;
         const { data, error } = await supabase.from('appointments').insert([{ 
-            patient_id: a.patient_id, 
-            provider_id: a.provider_id || null, 
-            branch_id: a.branch_id || req.user.branch_id, 
-            scheduled_at: a.scheduled_at, 
-            reason: a.reason, 
-            notes: a.notes, 
-            visit_type: a.visit_type || 'First Time Check',
+            patient_id: a.patient_id, provider_id: a.provider_id || null, 
+            branch_id: a.branch_id || req.user.branch_id, scheduled_at: a.scheduled_at, 
+            reason: a.reason, notes: a.notes, visit_type: a.visit_type || 'First Time Check',
             created_by: req.user.id 
         }]).select().single();
         if (error) throw error;
@@ -918,11 +1699,29 @@ app.post('/api/prescriptions', auth, role('doctor', 'surgeon', 'gp', 'health_off
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// PHARMACY AUTO-COMPLETE (JOURNEY & QUEUE)
 app.put('/api/prescriptions/:id/dispense', auth, role('pharmacist', 'pharmacy_tech', 'admin', 'super_admin'), async (req, res) => {
     try {
         const { data, error } = await supabase.from('prescriptions').update({ status: 'dispensed', dispensed_by: req.user.id, dispensed_at: new Date().toISOString() }).eq('id', req.params.id).select('id, patient_id').single();
         if (error) throw error;
+        
         await recordWorkflow(data.patient_id, 4, 5, 'social_work', req.user.id, 'Medication dispensed → follow-up');
+
+        // AUTO-COMPLETE QUEUE & JOURNEY
+        const q = _getQueue(req.user.branch_id || 'default');
+        for (let entry of q.entries.values()) {
+            if (entry.patient_id === data.patient_id && !['completed', 'cancelled'].includes(entry.status)) {
+                entry.status = 'completed';
+                entry.completed_at = new Date().toISOString();
+            }
+        }
+        const j = _getJourney(data.patient_id);
+        if (j) {
+            j.stage = 'Completed';
+            j.updated_at = new Date().toISOString();
+            j.history.push({ stage: 'Completed', at: j.updated_at, by: req.user.name });
+        }
+
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -996,6 +1795,9 @@ app.put('/api/profile/password', auth, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ============================================================
+// WORKFLOW LEVELS
+// ============================================================
 const WORKFLOW_LEVELS = {
     1:  { key: 'patient_services',      name: 'Patient Services',          stages: ['registration','records','triage','queue'] },
     2:  { key: 'clinical_services',     name: 'Clinical Services',         stages: ['gp','specialist','emergency','nurse','midwife','surgeon'] },
@@ -1026,12 +1828,9 @@ async function recordWorkflow(patientId, fromLevel, toLevel, stage, userId, note
     try {
         if (!patientId || !toLevel) return null;
         const { data, error } = await supabase.from('patient_workflow').insert([{
-            patient_id: patientId,
-            from_level: fromLevel ?? null,
-            to_level: toLevel,
+            patient_id: patientId, from_level: fromLevel ?? null, to_level: toLevel,
             to_stage: stage || WORKFLOW_LEVELS[toLevel]?.stages[0] || 'general',
-            transitioned_by: userId || null,
-            notes: notes || null
+            transitioned_by: userId || null, notes: notes || null
         }]).select().single();
         if (error) { console.error('Workflow insert error:', error.message); return null; }
         if (toLevel >= 7) {
@@ -1143,6 +1942,9 @@ app.get('/api/workflow/my-tasks', auth, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ============================================================
+// TELEGRAM
+// ============================================================
 const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN || '';
 const TG_ADMIN_CHAT_ID = process.env.TG_ADMIN_CHAT_ID || '';
 const TG_CS_HANDLE = process.env.TG_CS_HANDLE || 'TE21HUSH';
@@ -1190,6 +1992,9 @@ app.post('/api/telegram/webhook', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// ============================================================
+// 404 + BOOT
+// ============================================================
 app.use((req, res) => res.status(404).json({ error: 'API route not found.', url: req.url, method: req.method }));
 
 export default app;

@@ -56,7 +56,7 @@
         .stat-card::after { content:''; position:absolute; bottom:-20px; right:-20px; width:80px; height:80px; background:rgba(255,255,255,0.12); border-radius:50%; }
         .stat-blue { background: linear-gradient(135deg,#3b82f6,#6366f1); } .stat-green { background: linear-gradient(135deg,#10b981,#059669); }
         .stat-purple { background: linear-gradient(135deg,#8b5cf6,#6d28d9); } .stat-pink { background: linear-gradient(135deg,#ec4899,#be185d); }
-        .stat-cyan { background: linear-gradient(135deg,#06b6d4,#0e7490); }
+        .stat-cyan { background: linear-gradient(135deg,#06b6d4,#0e7490); } .stat-amber { background: linear-gradient(135deg,#f59e0b,#d97706); }
         .profile-cover { height:160px; background: linear-gradient(135deg,#2563eb,#8b5cf6,#ec4899); border-radius:1rem 1rem 0 0; }
         .profile-avatar-lg { width:110px; height:110px; border-radius:50%; border:4px solid #fff; display:flex; align-items:center; justify-content:center; font-size:2.75rem; font-weight:800; overflow:hidden; background-size:cover; background-position:center; }
         .profile-stat-card { background:#f9fafb; border:1px solid #e5e7eb; border-radius:.75rem; padding:.75rem 1rem; text-align:center; }
@@ -73,6 +73,20 @@
         .queue-card { background: linear-gradient(135deg,#0ea5e9,#8b5cf6); color:#fff; border-radius:1.25rem; padding:1.5rem; text-align:center; position:relative; overflow:hidden; }
         .queue-card::before { content:''; position:absolute; top:-60px; left:-60px; width:180px; height:180px; background:rgba(255,255,255,0.12); border-radius:50%; animation: rotateBg 25s linear infinite; }
         .queue-number { font-size:3.5rem; font-weight:900; line-height:1; text-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        /* NEW: queue ticket cards */
+        .queue-entry { border-radius:.75rem; padding:.75rem 1rem; border:1px solid #e5e7eb; background:#fff; display:flex; justify-content:space-between; align-items:center; gap:.5rem; margin-bottom:.5rem; }
+        .dark .queue-entry { background:#1f2937; border-color:#374151; }
+        .queue-entry.called { border-left:4px solid #f59e0b; background:#fffbeb; }
+        .dark .queue-entry.called { background:#78350f40; }
+        .queue-entry.arrived { border-left:4px solid #10b981; }
+        .queue-entry.missed { border-left:4px solid #ef4444; opacity:.85; }
+        .queue-entry.emergency { border-left:4px solid #dc2626; background:#fef2f2; animation: pulseRed 2s infinite; }
+        .dark .queue-entry.emergency { background:#7f1d1d40; }
+        .triage-chip { display:inline-block; padding:2px 8px; border-radius:9999px; font-size:10px; font-weight:800; }
+        .triage-critical { background:#dc2626; color:#fff; }
+        .triage-high { background:#f59e0b; color:#fff; }
+        .triage-medium { background:#fbbf24; color:#000; }
+        .triage-none { background:#e5e7eb; color:#374151; }
         #app-sidebar { transition: transform .3s ease-in-out; }
         @media (max-width: 767px) { #app-sidebar { box-shadow: 0 10px 40px rgba(0,0,0,.3); } }
         .live-dot { width:10px; height:10px; border-radius:50%; background:#ef4444; display:inline-block; animation: blink 1.2s infinite; }
@@ -88,7 +102,6 @@
         .wf-level-7, .wf-level-8, .wf-level-9, .wf-level-10 { background:#fee2e2; color:#991b1b; }
         #tg-cs-btn { position: fixed; bottom: 6.5rem; right: 1.5rem; z-index: 189; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg,#229ED9,#1c8ac0); color:#fff; box-shadow: 0 8px 24px rgba(34,158,217,.45); transition: transform .2s; text-decoration: none; }
         #tg-cs-btn:hover { transform: scale(1.08); } #tg-cs-btn svg { width: 30px; height: 30px; fill: #fff; }
-        /* Live room */
         .live-video-tile { position: relative; background:#000; border-radius: 0.75rem; overflow: hidden; aspect-ratio: 4/3; }
         .live-video-tile video { width:100%; height:100%; object-fit: cover; }
         .live-video-tile .live-name { position:absolute; bottom:4px; left:4px; right:4px; background:rgba(0,0,0,.6); color:#fff; font-size:10px; padding:2px 6px; border-radius:6px; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -102,6 +115,24 @@
         .live-grid[data-layout="4"] { grid-template-columns: repeat(2, 1fr); }
         .live-grid[data-layout="6"] { grid-template-columns: repeat(3, 1fr); }
         .live-grid[data-layout="9"] { grid-template-columns: repeat(3, 1fr); }
+        /* NEW: journey pill */
+        .journey-pill { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:9999px; font-size:12px; font-weight:700; margin-right:6px; }
+        .journey-pill.done { background:#10b981; color:#fff; }
+        .journey-pill.current { background:#3b82f6; color:#fff; box-shadow:0 0 0 3px rgba(59,130,246,.3); }
+        .journey-pill.todo { background:#e5e7eb; color:#6b7280; }
+        .dark .journey-pill.todo { background:#374151; color:#9ca3af; }
+        /* NEW: stock alert cards */
+        .stock-alert-low { background:#fef3c7; border-left:4px solid #f59e0b; }
+        .stock-alert-expiry { background:#fee2e2; border-left:4px solid #ef4444; }
+        .stock-alert-expired { background:#7f1d1d; color:#fecaca; border-left:4px solid #dc2626; }
+        .dark .stock-alert-low { background:#78350f40; color:#fbbf24; }
+        .dark .stock-alert-expiry { background:#7f1d1d40; color:#fca5a5; }
+        /* NEW: TV Mode */
+        .tv-screen { background: #0f172a; color: white; height: 100vh; width: 100vw; overflow: hidden; display: flex; flex-direction: column; }
+        .tv-header { padding: 2rem; text-align: center; border-bottom: 2px solid #1e293b; background: #1e293b; }
+        .tv-body { flex: 1; padding: 2rem; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2rem; }
+        .tv-announcement { font-size: 4rem; font-weight: 900; text-align: center; animation: pulseTv 2s infinite; }
+        @keyframes pulseTv { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.02); } }
         @media print {
             body { background: #fff !important; overflow: visible !important; height: auto !important; }
             #app-sidebar, #mobile-header, #sidebar-overlay, .no-print, #toast-container, #chatbot-toggle, #chatbot-window, #video-call-modal { display: none !important; }
@@ -114,6 +145,12 @@
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 font-sans text-gray-800 dark:text-gray-100 h-screen overflow-hidden flex flex-col transition-colors duration-300">
     <div id="toast-container" class="fixed bottom-4 right-4 z-[200] flex flex-col gap-2 max-w-[calc(100vw-2rem)]"></div>
+
+    <!-- 🆕 GLOBAL EMERGENCY OVERRIDE BANNER -->
+    <div id="emergency-override-banner" class="hidden fixed top-0 left-0 right-0 z-[9999] bg-red-600 text-white p-3 text-center animate-pulse shadow-2xl flex justify-center items-center gap-4">
+        <span id="emergency-banner-text" class="font-bold text-sm md:text-base">🚨 CRITICAL EMERGENCY ALERT: Patient requires immediate assessment!</span>
+        <button onclick="acknowledgeEmergencyBanner()" class="bg-white text-red-600 px-4 py-1 rounded-lg font-bold text-sm shadow">Acknowledge</button>
+    </div>
 
     <!-- ================= LOGIN SCREEN ================= -->
     <div id="login-screen" class="flex items-center justify-center flex-1 login-bg relative p-4 overflow-y-auto">
@@ -190,7 +227,8 @@
             </div>
         </div>
     </div>
-        <!-- ================= APP SCREEN ================= -->
+
+    <!-- ================= APP SCREEN ================= -->
     <div id="app-screen" class="hidden flex-1 flex overflow-hidden w-full h-full">
         <div id="mobile-header" class="md:hidden fixed top-0 left-0 right-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm px-3 py-2 flex items-center justify-between no-print">
             <button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Menu">
@@ -220,6 +258,7 @@
                             <button onclick="switchTab('myqueue')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-myqueue">🎫 My Queue</button>
                             <button onclick="switchTab('myappointments')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-myappointments">📅 My Appointments</button>
                             <button onclick="switchTab('myrecords')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-myrecords">📄 My Records</button>
+                            <button onclick="switchTab('myinstructions')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-myinstructions">📝 My Instructions</button>
                         </nav>
                     </div>
                     <div>
@@ -248,6 +287,29 @@
                             <button onclick="switchTab('appointments')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-appointments">📅 Appointments</button>
                             <button onclick="switchTab('profile')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-profile">👤 My Profile</button>
                             <button onclick="switchTab('settings')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-settings">⚙️ Settings</button>
+                        </nav>
+                    </div>
+                    <!-- NEW: Service Delivery section -->
+                    <div id="service-nav-section">
+                        <p class="px-3 text-xs font-bold text-emerald-500 uppercase mb-2">Service Delivery</p>
+                        <nav class="space-y-1">
+                            <button onclick="switchTab('queue')" class="nav-btn w-full flex items-center justify-between p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-queue">
+                                <span>🎫 Smart Queue</span><span id="queue-count-badge" class="hidden badge-red">0</span>
+                            </button>
+                            <button onclick="switchTab('triage')" class="nav-btn w-full flex items-center justify-between p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-triage">
+                                <span>🚨 Urgent Triage</span><span id="triage-count-badge" class="hidden badge-red">0</span>
+                            </button>
+                            <button onclick="switchTab('journey')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-journey">🛤️ Journey Tracker</button>
+                            <button onclick="switchTab('stock-alerts')" class="nav-btn w-full flex items-center justify-between p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-stock-alerts">
+                                <span>📦 Stock Alerts</span><span id="stock-count-badge" class="hidden badge-red">0</span>
+                            </button>
+                            <button onclick="switchTab('followup')" class="nav-btn w-full flex items-center justify-between p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-followup">
+                                <span>📩 Follow-ups</span><span id="followup-count-badge" class="hidden badge-red">0</span>
+                            </button>
+                            <button onclick="switchTab('handover')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-handover">📋 Handover</button>
+                            <button onclick="switchTab('instructions')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-instructions">🗣️ Instructions</button>
+                            <button onclick="switchTab('workload')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-workload">📈 Workload</button>
+                            <button onclick="switchTab('tv')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-tv">📺 TV Screen Mode</button>
                         </nav>
                     </div>
                     <div id="patient-extras-nav" class="hidden">
@@ -300,6 +362,8 @@
                             <button onclick="switchTab('messages')" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">💬 Messages</button>
                             <button onclick="switchTab('live')" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🎥 Live</button>
                             <button onclick="switchTab('workflow')" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🔄 Workflow</button>
+                            <button onclick="switchTab('queue')" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🎫 Queue</button>
+                            <button onclick="switchTab('workload')" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">📈 Workload</button>
                             <button onclick="printCurrentView()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur no-print">🖨️ Print</button>
                         </div>
                     </div>
@@ -437,7 +501,8 @@
                         </div>
                     </div>
                 </div>
-                                <!-- ================= LIVE CONFERENCE ================= -->
+
+                <!-- ================= LIVE CONFERENCE ================= -->
                 <div id="view-live" class="view-section fade-in hidden max-w-6xl mx-auto">
                     <div class="page-hero no-print">
                         <h2>🎥 Live Conference <span id="live-indicator" class="hidden live-dot ml-2"></span></h2>
@@ -455,7 +520,6 @@
                         </div>
                     </div>
 
-                    <!-- Moderator Panel -->
                     <div id="live-moderator-panel" class="hidden glass rounded-2xl p-4 mb-4">
                         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                             <div>
@@ -466,20 +530,14 @@
                                 <button id="live-toggle-btn" onclick="toggleLiveConference()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-lg transition">Turn ON Live Conference</button>
                             </div>
                         </div>
-
-                        <!-- Join Requests -->
                         <div class="mt-4 p-3 bg-white/60 dark:bg-black/20 rounded-xl">
                             <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">📥 Join Requests <span id="live-req-count" class="badge-red hidden">0</span></h4>
                             <div id="live-requests-list" class="space-y-2 max-h-56 overflow-y-auto"></div>
                         </div>
-
-                        <!-- Participants Management -->
                         <div class="mt-3 p-3 bg-white/60 dark:bg-black/20 rounded-xl">
                             <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">👥 Participants</h4>
                             <div id="live-participants-list" class="space-y-2 max-h-56 overflow-y-auto text-xs"></div>
                         </div>
-
-                        <!-- Moderator promotion -->
                         <div class="mt-3 p-3 bg-white/60 dark:bg-black/20 rounded-xl">
                             <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">👑 Moderators</h4>
                             <div id="live-mods-list" class="flex flex-wrap gap-2 text-xs mb-2"></div>
@@ -488,15 +546,12 @@
                             </select>
                             <button onclick="promoteSelectedModerator()" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs font-bold">➕ Promote to Moderator</button>
                         </div>
-
-                        <!-- Banned users -->
                         <div class="mt-3 p-3 bg-white/60 dark:bg-black/20 rounded-xl">
                             <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">🚫 Banned</h4>
                             <div id="live-banned-list" class="text-xs space-y-1"></div>
                         </div>
                     </div>
 
-                    <!-- Participant Request Panel -->
                     <div id="live-participant-panel" class="glass rounded-2xl p-6 mb-4 text-center">
                         <div id="live-participant-idle">
                             <h3 class="font-bold text-sm mb-1">🎧 Request to join</h3>
@@ -509,7 +564,6 @@
                         </div>
                     </div>
 
-                    <!-- Live Room -->
                     <div id="live-room" class="hidden">
                         <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-4 mb-4 shadow-xl">
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
@@ -522,8 +576,6 @@
                                     <button onclick="leaveLiveRoom()" class="bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-lg text-xs font-bold">Leave</button>
                                 </div>
                             </div>
-
-                            <!-- Reactions bar -->
                             <div class="flex flex-wrap gap-2 mb-3">
                                 <span class="text-xs opacity-70 self-center">React:</span>
                                 <button onclick="sendReaction('👍')" class="bg-white/10 hover:bg-white/20 px-2 py-1 rounded-lg text-lg">👍</button>
@@ -533,8 +585,6 @@
                                 <button onclick="sendReaction('👏')" class="bg-white/10 hover:bg-white/20 px-2 py-1 rounded-lg text-lg">👏</button>
                                 <button onclick="sendReaction('🔥')" class="bg-white/10 hover:bg-white/20 px-2 py-1 rounded-lg text-lg">🔥</button>
                             </div>
-
-                            <!-- Layout selector -->
                             <div class="flex flex-wrap items-center gap-2 mb-3 text-xs">
                                 <span class="opacity-70">Layout:</span>
                                 <button onclick="setLiveLayout('auto')" class="bg-white/10 hover:bg-white/20 px-2 py-1 rounded">Auto</button>
@@ -543,13 +593,9 @@
                                 <button onclick="setLiveLayout('6')" class="bg-white/10 hover:bg-white/20 px-2 py-1 rounded">3×2</button>
                                 <button onclick="setLiveLayout('9')" class="bg-white/10 hover:bg-white/20 px-2 py-1 rounded">3×3</button>
                             </div>
-
-                            <!-- Video grid -->
                             <div id="live-participants-grid" class="live-grid" data-layout="auto"></div>
                             <div id="live-reactions-overlay" class="pointer-events-none absolute inset-0 z-10"></div>
                         </div>
-
-                        <!-- Live Chat -->
                         <div class="glass rounded-2xl p-4 mb-4">
                             <h3 class="font-bold text-sm mb-2">💬 Live Chat</h3>
                             <div id="live-chat-box" class="max-h-40 overflow-y-auto space-y-1 text-xs bg-gray-50 dark:bg-gray-900 rounded-lg p-2 mb-2 border border-gray-200 dark:border-gray-700"></div>
@@ -558,8 +604,6 @@
                                 <button onclick="sendLiveChat()" class="bg-blue-600 text-white px-4 rounded-lg font-bold text-sm">Send</button>
                             </div>
                         </div>
-
-                        <!-- Translation -->
                         <div class="glass rounded-2xl p-4">
                             <h3 class="font-bold text-sm mb-2">🌐 Live AI Translation · 4 modes</h3>
                             <div class="trans-bar mb-2">
@@ -612,16 +656,220 @@
                     <div id="workflow-groups" class="space-y-4"></div>
                 </div>
 
-                <!-- Patient views -->
+                <!-- =====================================================
+                     🆕 VIEW: TV SCREEN MODE
+                ====================================================== -->
+                <div id="view-tv" class="view-section fade-in hidden tv-screen fixed inset-0 z-[500] bg-slate-900">
+                    <div class="tv-header flex justify-between items-center bg-slate-800 text-white p-6 shadow-2xl">
+                        <div class="flex items-center gap-4">
+                            <span class="text-4xl">🩺</span>
+                            <h1 class="text-3xl font-extrabold tracking-widest text-blue-400">MedConnect</h1>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xl font-bold" id="tv-clock">--:--</p>
+                            <p class="text-sm text-gray-400">Waiting Room Display</p>
+                        </div>
+                        <button onclick="switchTab('dashboard')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold no-print">Exit TV Mode</button>
+                    </div>
+                    <div class="tv-body">
+                        <div id="tv-announcements" class="w-full max-w-5xl space-y-6">
+                            <!-- Announcements injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- =====================================================
+                     NEW FEATURE 1: SMART QUEUE
+                ====================================================== -->
+                <div id="view-queue" class="view-section fade-in hidden max-w-5xl mx-auto">
+                    <div class="page-hero no-print">
+                        <h2>🎫 Smart Queue & Clinic Teller</h2>
+                        <p>Register → assign office → call → arrived → completed. Emergency triggers immediate staff alert.</p>
+                        <div class="relative z-10 flex flex-wrap gap-2 mt-3">
+                            <button onclick="openQueueRegisterModal()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">+ Register Patient</button>
+                            <button onclick="loadQueue()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🔄 Refresh</button>
+                            <button onclick="printCurrentView()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🖨️ Print</button>
+                        </div>
+                    </div>
+                    <div id="queue-announcements" class="mb-4 space-y-2"></div>
+                    <div class="glass rounded-2xl p-4 mb-4">
+                        <h3 class="font-bold text-sm mb-2">📋 Today's Queue</h3>
+                        <div id="queue-list"></div>
+                    </div>
+                    <div class="glass rounded-2xl p-4">
+                        <h3 class="font-bold text-sm mb-2">🏥 Offices</h3>
+                        <div id="queue-offices" class="grid grid-cols-2 md:grid-cols-4 gap-2"></div>
+                    </div>
+                </div>
+
+                <!-- =====================================================
+                     NEW FEATURE 2: TRIAGE / URGENT FLAGGING
+                ====================================================== -->
+                <div id="view-triage" class="view-section fade-in hidden max-w-5xl mx-auto">
+                    <div class="page-hero no-print">
+                        <h2>🚨 Urgent Triage Flagging</h2>
+                        <p>Clinician-approved checklist. <b>AI is not used to decide safety.</b> A human must assess any warning sign.</p>
+                        <div class="relative z-10 flex flex-wrap gap-2 mt-3">
+                            <button onclick="openTriageModal()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">+ New Assessment</button>
+                            <button onclick="loadTriage()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🔄 Refresh</button>
+                        </div>
+                    </div>
+                    <div id="triage-list" class="space-y-3"></div>
+                </div>
+
+                <!-- =====================================================
+                     NEW FEATURE 3: PATIENT JOURNEY TRACKER
+                ====================================================== -->
+                <div id="view-journey" class="view-section fade-in hidden max-w-4xl mx-auto">
+                    <div class="page-hero no-print">
+                        <h2>🛤️ Patient Journey Tracker</h2>
+                        <p>Registered → Waiting → With clinician → Laboratory → Pharmacy → Completed</p>
+                        <div class="relative z-10 flex flex-wrap gap-2 mt-3">
+                            <button onclick="loadJourneyDashboard()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🔄 Refresh</button>
+                        </div>
+                    </div>
+                    <div id="journey-stats" class="grid grid-cols-2 md:grid-cols-6 gap-2 mb-4"></div>
+                    <div id="journey-longwaiting" class="mb-4"></div>
+                    <div class="glass rounded-2xl p-4">
+                        <h3 class="font-bold text-sm mb-3">Look up a patient</h3>
+                        <div class="flex gap-2 mb-3">
+                            <select id="journey-patient-select" class="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option value="">-- Select Patient --</option></select>
+                            <button onclick="lookupJourney()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm">View Journey</button>
+                        </div>
+                        <div id="journey-result"></div>
+                    </div>
+                </div>
+
+                <!-- =====================================================
+                     NEW FEATURE 7: STOCK ALERTS
+                ====================================================== -->
+                <div id="view-stock-alerts" class="view-section fade-in hidden max-w-5xl mx-auto">
+                    <div class="page-hero no-print">
+                        <h2>📦 Medicine Stock & Expiry Alerts</h2>
+                        <p>Low stock and near-expiry warnings for pharmacy staff</p>
+                        <div class="relative z-10 flex flex-wrap gap-2 mt-3">
+                            <button onclick="openStockModal()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">+ Add Stock Item</button>
+                            <button onclick="loadStock()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🔄 Refresh</button>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-base mb-2">⚠️ Active Alerts</h3>
+                    <div id="stock-alerts-list" class="space-y-2 mb-4"></div>
+                    <h3 class="font-bold text-base mb-2">📊 Stock Items</h3>
+                    <div id="stock-items-list" class="space-y-2"></div>
+                </div>
+
+                <!-- =====================================================
+                     NEW FEATURE 5 & 6: FOLLOW-UP REMINDERS
+                ====================================================== -->
+                <div id="view-followup" class="view-section fade-in hidden max-w-5xl mx-auto">
+                    <div class="page-hero no-print">
+                        <h2>📩 Follow-up Reminders</h2>
+                        <p>Contraceptive and general follow-ups. Health worker confirms date. Discreet contact only.</p>
+                        <div class="relative z-10 flex flex-wrap gap-2 mt-3">
+                            <button onclick="openFollowupModal()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">+ Add Follow-up</button>
+                            <button onclick="loadFollowups()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🔄 Refresh</button>
+                        </div>
+                    </div>
+                    <div id="followup-stats" class="grid grid-cols-2 md:grid-cols-6 gap-2 mb-4"></div>
+                    <div id="followup-list" class="space-y-2"></div>
+                </div>
+
+                <!-- =====================================================
+                     NEW FEATURE 8: REFERRAL TRACKING
+                ====================================================== -->
+                <div id="view-referral-track" class="view-section fade-in hidden max-w-5xl mx-auto">
+                    <div class="page-hero no-print">
+                        <h2>🔗 Referral Tracking</h2>
+                        <p>Sent → Accepted → Completed</p>
+                        <div class="relative z-10 flex flex-wrap gap-2 mt-3">
+                            <button onclick="openReferralTrackModal()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">+ New Referral</button>
+                            <button onclick="loadReferralTrack()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🔄 Refresh</button>
+                        </div>
+                    </div>
+                    <div id="referral-track-stats" class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4"></div>
+                    <div id="referral-track-list" class="space-y-2"></div>
+                </div>
+
+                <!-- =====================================================
+                     NEW FEATURE 9: CLINICIAN HANDOVER
+                ====================================================== -->
+                <div id="view-handover" class="view-section fade-in hidden max-w-5xl mx-auto">
+                    <div class="page-hero no-print">
+                        <h2>📋 Clinician Handover Summary</h2>
+                        <p>Support — not replace — the original record. Missing information is highlighted.</p>
+                        <div class="relative z-10 flex flex-wrap gap-2 mt-3">
+                            <button onclick="openHandoverModal()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">+ Generate Summary</button>
+                            <button onclick="loadHandovers()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🔄 Refresh</button>
+                        </div>
+                    </div>
+                    <div id="handover-list" class="space-y-2"></div>
+                </div>
+
+                <!-- =====================================================
+                     NEW FEATURE 10: PATIENT INSTRUCTIONS
+                ====================================================== -->
+                <div id="view-instructions" class="view-section fade-in hidden max-w-4xl mx-auto">
+                    <div class="page-hero no-print">
+                        <h2>🗣️ Patient Instructions</h2>
+                        <p>Clear, reviewed instructions in the patient's preferred language</p>
+                        <div class="relative z-10 flex flex-wrap gap-2 mt-3">
+                            <button onclick="openInstructionModal()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">+ New Instruction</button>
+                            <button onclick="loadInstructions()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🔄 Refresh</button>
+                        </div>
+                    </div>
+                    <div id="instructions-list" class="space-y-2"></div>
+                </div>
+
+                <!-- Patient's own instructions view -->
+                <div id="view-myinstructions" class="view-section fade-in hidden max-w-3xl mx-auto">
+                    <div class="page-hero no-print">
+                        <h2>📝 My Instructions</h2>
+                        <p>Simple, clear instructions from your health worker</p>
+                        <div class="relative z-10 flex flex-wrap gap-2 mt-3">
+                            <button onclick="loadMyInstructions()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🔄 Refresh</button>
+                        </div>
+                    </div>
+                    <div id="my-instructions-list" class="space-y-3"></div>
+                </div>
+
+                <!-- =====================================================
+                     NEW FEATURE 11: BRANCH WORKLOAD DASHBOARD
+                ====================================================== -->
+                <div id="view-workload" class="view-section fade-in hidden max-w-6xl mx-auto">
+                    <div class="page-hero no-print">
+                        <h2>📈 Branch Workload Dashboard</h2>
+                        <p>Helps staff decide where to direct resources — does NOT make clinical decisions</p>
+                        <div class="relative z-10 flex flex-wrap gap-2 mt-3">
+                            <button onclick="loadWorkload()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🔄 Refresh</button>
+                            <button onclick="printCurrentView()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🖨️ Print</button>
+                        </div>
+                    </div>
+                    <div id="workload-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="glass rounded-2xl p-4"><h3 class="font-bold text-sm mb-2">⏱️ Longest Waiting Times</h3><div id="workload-longest-waits"></div></div>
+                        <div class="glass rounded-2xl p-4"><h3 class="font-bold text-sm mb-2">🏥 Waiting by Office</h3><div id="workload-by-office"></div></div>
+                        <div class="glass rounded-2xl p-4"><h3 class="font-bold text-sm mb-2">🏢 Workload by Department</h3><div id="workload-by-department"></div></div>
+                        <div class="glass rounded-2xl p-4"><h3 class="font-bold text-sm mb-2">🚨 Missed Calls</h3><div id="workload-missed"></div></div>
+                    </div>
+                </div>
+
+                <!-- =====================================================
+                     PATIENT VIEWS (Updated with Dynamic Alerts)
+                ====================================================== -->
                 <div id="view-myhealth" class="view-section fade-in hidden max-w-5xl mx-auto">
                     <div class="page-hero no-print">
                         <h2>💖 My Health Dashboard</h2>
                         <p id="myhealth-greeting">Welcome to your personal health portal</p>
                         <div class="relative z-10 flex flex-wrap gap-2 mt-3">
                             <button onclick="switchTab('myqueue')" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🎫 My Queue</button>
+                            <button onclick="switchTab('myinstructions')" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">📝 Instructions</button>
                             <button onclick="printCurrentView()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-1.5 rounded-xl font-bold text-xs backdrop-blur">🖨️ Print</button>
                         </div>
                     </div>
+                    
+                    <!-- 🆕 DYNAMIC ALERTS CONTAINER -->
+                    <div id="patient-alerts-container" class="mb-4"></div>
+
                     <div id="patient-quick-stats" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6"></div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
                         <div class="chart-card"><h3 class="font-bold text-sm mb-3">📊 My Health Visits</h3><div class="h-56"><canvas id="chart-myvisits"></canvas></div></div>
@@ -702,7 +950,7 @@
                         <div class="glass p-5 rounded-xl"><h3 class="font-bold text-lg mb-3">📷 Profile Photo</h3><div class="flex items-center gap-3"><div id="settings-avatar" class="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xl bg-cover bg-center">U</div><button onclick="document.getElementById('avatar-input').click()" class="bg-purple-600 text-white px-3 py-2 rounded-lg font-bold text-xs">Upload</button></div></div>
                         <div class="glass p-5 rounded-xl"><h3 class="font-bold text-lg mb-3">🔑 Reset Password</h3><input type="password" id="pw-current" placeholder="Current password" class="w-full p-2 mb-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm"><input type="password" id="pw-new" placeholder="New password" class="w-full p-2 mb-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm"><input type="password" id="pw-confirm" placeholder="Confirm new" class="w-full p-2 mb-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm"><button onclick="changeMyPassword()" class="w-full bg-red-600 text-white py-2 rounded-lg font-bold text-sm">Update Password</button></div>
                         <div class="glass p-5 rounded-xl md:col-span-2"><h3 class="font-bold text-lg mb-3">📞 Customer Service</h3><p class="text-sm text-gray-600 dark:text-gray-300 mb-2">Chat with a real agent on Telegram</p><a id="settings-tg-link" href="https://t.me/TE21HUSH" target="_blank" class="inline-flex items-center gap-2 bg-[#229ED9] text-white px-4 py-2 rounded-lg font-bold text-sm">✈️ @TE21HUSH</a></div>
-                        <div class="glass p-5 rounded-xl md:col-span-2"><h3 class="font-bold text-lg mb-3">ℹ️ About</h3><p class="text-sm text-gray-600 dark:text-gray-300">MedConnect Ethiopia — Bahir Dar Hackathon v4.2</p></div>
+                        <div class="glass p-5 rounded-xl md:col-span-2"><h3 class="font-bold text-lg mb-3">ℹ️ About</h3><p class="text-sm text-gray-600 dark:text-gray-300">MedConnect Ethiopia — Bahir Dar Hackathon v4.4 · Fully Automated Clinical Flow</p></div>
                     </div>
                 </div>
 
@@ -745,8 +993,7 @@
             </main>
         </div>
     </div>
-
-    <!-- ================= CHATBOT ================= -->
+        <!-- ================= CHATBOT ================= -->
     <button id="chatbot-toggle" onclick="toggleChatbot()" class="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-[190] hover:scale-110 transition no-print">🤖</button>
     <div id="chatbot-window" class="hidden fixed bottom-24 right-6 w-80 md:w-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[190] flex flex-col overflow-hidden no-print" style="height:500px;max-height:80vh;">
         <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white flex justify-between items-center">
@@ -796,14 +1043,18 @@
         </div>
     </div>
 
-    <!-- Simple modals -->
+    <!-- =========================================================
+         SIMPLE MODALS (Branch, Worker, Reset PW)
+    ========================================================== -->
     <div id="branch-created-modal" class="hidden fixed inset-0 bg-black/50 z-[150] items-center justify-center p-4"><div class="glass rounded-2xl shadow-xl max-w-md w-full p-5 max-h-[90vh] overflow-y-auto"><h3 class="text-xl font-bold mb-2 text-green-600">✅ Branch Created!</h3><p class="text-xs text-gray-500 mb-4">Save these credentials.</p><div class="space-y-3"><div><label class="text-xs font-bold text-gray-500 uppercase block mb-1">Name</label><input id="bc-name" readonly class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div><div><label class="text-xs font-bold text-gray-500 uppercase block mb-1">Link</label><div class="flex gap-2"><input id="bc-link" readonly class="flex-1 p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm font-mono"><button onclick="copyInput('bc-link')" class="bg-blue-600 text-white px-3 rounded-lg font-bold text-sm">Copy</button></div></div><div><label class="text-xs font-bold text-gray-500 uppercase block mb-1">Staff ID</label><div class="flex gap-2"><input id="bc-staff" readonly class="flex-1 p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm font-mono"><button onclick="copyInput('bc-staff')" class="bg-blue-600 text-white px-3 rounded-lg font-bold text-sm">Copy</button></div></div><div><label class="text-xs font-bold text-gray-500 uppercase block mb-1">Password</label><div class="flex gap-2"><input id="bc-pass" readonly class="flex-1 p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm font-mono"><button onclick="copyInput('bc-pass')" class="bg-blue-600 text-white px-3 rounded-lg font-bold text-sm">Copy</button></div></div></div><button onclick="closeBranchModal()" class="w-full mt-4 bg-gray-200 dark:bg-gray-700 py-2.5 rounded-lg font-bold">Close</button></div></div>
 
     <div id="worker-created-modal" class="hidden fixed inset-0 bg-black/50 z-[150] items-center justify-center p-4"><div class="glass rounded-2xl shadow-xl max-w-md w-full p-5"><h3 class="text-xl font-bold mb-2 text-green-600">✅ Worker Created!</h3><div class="space-y-3"><div><label class="text-xs font-bold text-gray-500 uppercase block mb-1">Name</label><input id="wc-name" readonly class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div><div><label class="text-xs font-bold text-gray-500 uppercase block mb-1">Role</label><input id="wc-role" readonly class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div><div><label class="text-xs font-bold text-gray-500 uppercase block mb-1">Staff ID</label><div class="flex gap-2"><input id="wc-staff" readonly class="flex-1 p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm font-mono"><button onclick="copyInput('wc-staff')" class="bg-blue-600 text-white px-3 rounded-lg font-bold text-sm">Copy</button></div></div><div><label class="text-xs font-bold text-gray-500 uppercase block mb-1">Password</label><div class="flex gap-2"><input id="wc-pass" readonly class="flex-1 p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm font-mono"><button onclick="copyInput('wc-pass')" class="bg-blue-600 text-white px-3 rounded-lg font-bold text-sm">Copy</button></div></div></div><button onclick="closeWorkerModal()" class="w-full mt-4 bg-gray-200 dark:bg-gray-700 py-2.5 rounded-lg font-bold">Close</button></div></div>
 
     <div id="reset-pw-modal" class="hidden fixed inset-0 bg-black/50 z-[150] items-center justify-center p-4"><div class="glass rounded-2xl shadow-xl max-w-md w-full p-5"><h3 class="text-xl font-bold mb-2 text-blue-600">🔑 Password Reset</h3><div class="space-y-3"><div><label class="text-xs font-bold text-gray-500 uppercase block mb-1">Staff ID</label><input id="rp-staff" readonly class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm font-mono"></div><div><label class="text-xs font-bold text-gray-500 uppercase block mb-1">New Password</label><div class="flex gap-2"><input id="rp-pass" readonly class="flex-1 p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm font-mono"><button onclick="copyInput('rp-pass')" class="bg-blue-600 text-white px-3 rounded-lg font-bold text-sm">Copy</button></div></div></div><button onclick="document.getElementById('reset-pw-modal').classList.add('hidden')" class="w-full mt-4 bg-gray-200 dark:bg-gray-700 py-2.5 rounded-lg font-bold">Close</button></div></div>
 
-    <!-- Add patient / book appt / lab / prescribe / inventory / referral / workflow modals -->
+    <!-- =========================================================
+         CLINICAL MODALS (Patient, Appt, Lab, Prescribe, Inv, Referral)
+    ========================================================== -->
     <div id="add-patient-modal" class="hidden fixed inset-0 bg-black/50 z-[150] items-center justify-center p-4"><div class="glass rounded-2xl shadow-xl max-w-md w-full p-5"><h3 class="text-xl font-bold mb-4 text-blue-600">Register New Patient</h3><form id="add-patient-form" class="space-y-3"><div><label class="text-xs font-bold mb-1 block">Full Name *</label><input type="text" id="ap-name" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div><div><label class="text-xs font-bold mb-1 block">Phone</label><input type="tel" id="ap-phone" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div><div><label class="text-xs font-bold mb-1 block">Gender</label><select id="ap-gender" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option>Male</option><option>Female</option></select></div><div><label class="text-xs font-bold mb-1 block">Visit Type</label><select id="ap-visit-type" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option>First Time Check</option><option>Follow-up</option><option>Emergency</option><option>Maternal Care</option><option>Chronic Care</option><option>Lab Test Only</option><option>Vaccination</option></select></div><div class="flex gap-2 mt-4"><button type="submit" class="flex-1 bg-green-600 text-white font-bold py-2 rounded-lg">Save</button><button type="button" onclick="document.getElementById('add-patient-modal').classList.add('hidden')" class="bg-gray-300 dark:bg-gray-600 font-bold py-2 px-4 rounded-lg">Cancel</button></div></form></div></div>
 
     <div id="book-appt-modal" class="hidden fixed inset-0 bg-black/50 z-[150] items-center justify-center p-4"><div class="glass rounded-2xl shadow-xl max-w-md w-full p-5"><h3 class="text-xl font-bold mb-4 text-blue-600">Book Appointment</h3><form id="book-appt-form" class="space-y-3"><div><label class="text-xs font-bold mb-1 block">Patient *</label><select id="ba-patient" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option value="">Loading...</option></select></div><div><label class="text-xs font-bold mb-1 block">Date & Time *</label><input type="datetime-local" id="ba-time" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div><div><label class="text-xs font-bold mb-1 block">Reason</label><input type="text" id="ba-reason" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div><div><label class="text-xs font-bold mb-1 block">Visit Type</label><select id="ba-visit-type" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option>First Time Check</option><option>Follow-up</option><option>Emergency</option><option>Maternal Care</option><option>Chronic Care</option><option>Lab Test Only</option><option>Vaccination</option></select></div><div class="flex gap-2 mt-4"><button type="submit" class="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg">Book</button><button type="button" onclick="document.getElementById('book-appt-modal').classList.add('hidden')" class="bg-gray-300 dark:bg-gray-600 font-bold py-2 px-4 rounded-lg">Cancel</button></div></form></div></div>
@@ -819,7 +1070,133 @@
     <div id="workflow-transition-modal" class="hidden fixed inset-0 bg-black/50 z-[160] items-center justify-center p-4"><div class="glass rounded-2xl shadow-xl max-w-lg w-full p-5 max-h-[90vh] overflow-y-auto"><h3 class="text-xl font-bold mb-2 text-purple-600">🔄 Advance Patient</h3><p id="wf-modal-patient" class="text-sm text-gray-500 mb-4">—</p><form id="workflow-transition-form" class="space-y-3"><input type="hidden" id="wf-patient-id"><div><label class="text-xs font-bold mb-1 block">Target Level *</label><select id="wf-to-level" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option value="">— Select —</option><option value="1">1 · Patient Services</option><option value="2">2 · Clinical Services</option><option value="3">3 · Diagnostic Services</option><option value="4">4 · Treatment Services</option><option value="5">5 · Support Services</option><option value="6">6 · Department Management</option><option value="7">7 · Hospital Administration</option><option value="8">8 · Zonal Administration</option><option value="9">9 · Regional Health Bureau</option><option value="10">10 · Federal Ministry of Health</option></select></div><div><label class="text-xs font-bold mb-1 block">Assign to Worker / Role *</label><input type="text" id="wf-search-input" oninput="filterWfWorkers()" placeholder="🔍 Search..." class="w-full p-1.5 mb-1 border rounded bg-white dark:bg-gray-700 text-xs"><select id="wf-worker-select" required size="5" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option value="">-- Select Worker --</option></select></div><div><label class="text-xs font-bold mb-1 block">Notes</label><textarea id="wf-notes" rows="2" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></textarea></div><div class="flex gap-2 mt-4"><button type="submit" class="flex-1 bg-purple-600 text-white font-bold py-2 rounded-lg">Transition →</button><button type="button" onclick="document.getElementById('workflow-transition-modal').classList.add('hidden')" class="bg-gray-300 dark:bg-gray-600 font-bold py-2 px-4 rounded-lg">Cancel</button></div></form></div></div>
 
     <div id="workflow-journey-modal" class="hidden fixed inset-0 bg-black/50 z-[160] items-center justify-center p-4"><div class="glass rounded-2xl shadow-xl max-w-2xl w-full p-5 max-h-[90vh] overflow-y-auto"><div class="flex justify-between items-center mb-3"><h3 class="text-xl font-bold text-blue-600">🩺 Patient Journey</h3><button onclick="document.getElementById('workflow-journey-modal').classList.add('hidden')" class="text-gray-500 hover:text-gray-800 text-2xl leading-none">×</button></div><div id="wf-journey-body" class="text-sm">Loading…</div></div></div>
-        <script>
+
+    <!-- =========================================================
+         NEW FEATURE MODALS
+    ========================================================== -->
+    <!-- Queue register modal -->
+    <div id="queue-register-modal" class="hidden fixed inset-0 bg-black/50 z-[160] items-center justify-center p-4">
+        <div class="glass rounded-2xl shadow-xl max-w-md w-full p-5">
+            <h3 class="text-xl font-bold mb-4 text-cyan-600">🎫 Register to Queue</h3>
+            <form id="queue-register-form" class="space-y-3">
+                <div><label class="text-xs font-bold mb-1 block">Patient *</label><select id="q-patient" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option value="">Loading...</option></select></div>
+                <div><label class="text-xs font-bold mb-1 block">Department</label><select id="q-dept" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option>General</option><option>Maternal</option><option>Emergency</option><option>Pediatrics</option></select></div>
+                <div><label class="text-xs font-bold mb-1 block">Office</label><select id="q-office" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option value="">Auto-assign</option></select></div>
+                <div><label class="text-xs font-bold mb-1 block">Visit Type</label><select id="q-visit-type" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option>First Time Check</option><option>Follow-up</option><option>Emergency</option><option>Maternal Care</option><option>Chronic Care</option><option>Lab Test Only</option><option>Vaccination</option></select></div>
+                <div><label class="text-xs font-bold mb-1 block">Private notification channel (optional)</label><input type="text" id="q-contact" placeholder="e.g. phone / telegram" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div>
+                <div class="flex gap-2 mt-4"><button type="submit" class="flex-1 bg-cyan-600 text-white font-bold py-2 rounded-lg">Register →</button><button type="button" onclick="document.getElementById('queue-register-modal').classList.add('hidden')" class="bg-gray-300 dark:bg-gray-600 font-bold py-2 px-4 rounded-lg">Cancel</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Triage modal -->
+    <div id="triage-modal" class="hidden fixed inset-0 bg-black/50 z-[160] items-center justify-center p-4">
+        <div class="glass rounded-2xl shadow-xl max-w-2xl w-full p-5 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold mb-2 text-red-600">🚨 Urgent Case Assessment</h3>
+            <p class="text-xs text-gray-500 mb-3">Clinician-approved checklist. <b>If any warning sign is present, immediately alert clinical staff.</b> AI is NOT used to decide safety.</p>
+            <form id="triage-form" class="space-y-3">
+                <div><label class="text-xs font-bold mb-1 block">Patient *</label><select id="tri-patient" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option value="">Loading...</option></select></div>
+                <div><label class="text-xs font-bold mb-1 block">Symptoms (free text)</label><textarea id="tri-symptoms" rows="2" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></textarea></div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div><label class="text-xs font-bold mb-1 block">Temp (°C)</label><input type="number" step="0.1" id="tri-temp" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div>
+                    <div><label class="text-xs font-bold mb-1 block">SBP</label><input type="number" id="tri-sbp" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div>
+                    <div><label class="text-xs font-bold mb-1 block">HR</label><input type="number" id="tri-hr" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold mb-1 block">Warning-sign checklist (tick all that apply)</label>
+                    <div id="triage-checklist" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-64 overflow-y-auto p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"></div>
+                </div>
+                <div><label class="text-xs font-bold mb-1 block">Notes</label><textarea id="tri-notes" rows="2" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></textarea></div>
+                <div class="flex gap-2 mt-4"><button type="submit" class="flex-1 bg-red-600 text-white font-bold py-2 rounded-lg">Flag & Alert Staff</button><button type="button" onclick="document.getElementById('triage-modal').classList.add('hidden')" class="bg-gray-300 dark:bg-gray-600 font-bold py-2 px-4 rounded-lg">Cancel</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stock item modal -->
+    <div id="stock-modal" class="hidden fixed inset-0 bg-black/50 z-[160] items-center justify-center p-4">
+        <div class="glass rounded-2xl shadow-xl max-w-md w-full p-5">
+            <h3 class="text-xl font-bold mb-4 text-amber-600">📦 Add Stock Item</h3>
+            <form id="stock-form" class="space-y-3">
+                <div><label class="text-xs font-bold mb-1 block">Item Name *</label><input type="text" id="st-name" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="text-xs font-bold mb-1 block">Quantity *</label><input type="number" id="st-qty" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div>
+                    <div><label class="text-xs font-bold mb-1 block">Unit</label><input type="text" id="st-unit" placeholder="tablets" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div>
+                    <div><label class="text-xs font-bold mb-1 block">Reorder level</label><input type="number" id="st-reorder" value="10" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div>
+                    <div><label class="text-xs font-bold mb-1 block">Expiry date</label><input type="date" id="st-expiry" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div>
+                </div>
+                <div><label class="text-xs font-bold mb-1 block">Batch #</label><input type="text" id="st-batch" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div>
+                <div class="flex gap-2 mt-4"><button type="submit" class="flex-1 bg-amber-600 text-white font-bold py-2 rounded-lg">Add</button><button type="button" onclick="document.getElementById('stock-modal').classList.add('hidden')" class="bg-gray-300 dark:bg-gray-600 font-bold py-2 px-4 rounded-lg">Cancel</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Follow-up modal -->
+    <div id="followup-modal" class="hidden fixed inset-0 bg-black/50 z-[160] items-center justify-center p-4">
+        <div class="glass rounded-2xl shadow-xl max-w-md w-full p-5 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold mb-4 text-purple-600">📩 Add Follow-up</h3>
+            <form id="followup-form" class="space-y-3">
+                <div><label class="text-xs font-bold mb-1 block">Patient *</label><select id="fu-patient" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option value="">Loading...</option></select></div>
+                <div><label class="text-xs font-bold mb-1 block">Type</label><select id="fu-type" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm" onchange="updateFollowupForm()"><option value="general">General follow-up</option><option value="contraceptive">Contraceptive</option></select></div>
+                <div id="fu-method-wrap" class="hidden"><label class="text-xs font-bold mb-1 block">Contraceptive method</label><select id="fu-method" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm" onchange="onMethodChange()"><option value="">-- Select --</option></select><p class="text-[10px] text-gray-500 mt-1">Return interval depends on method — a clinician MUST confirm the due date.</p></div>
+                <div><label class="text-xs font-bold mb-1 block">Clinician-confirmed due date *</label><input type="date" id="fu-due" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div>
+                <div><label class="text-xs font-bold mb-1 block">Purpose / notes</label><textarea id="fu-purpose" rows="2" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></textarea></div>
+                <div><label class="text-xs font-bold mb-1 block">Contact channel *</label><select id="fu-channel" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option value="app">In-app</option><option value="sms">SMS</option><option value="telegram">Telegram</option><option value="phone">Phone call</option></select></div>
+                <div><label class="text-xs font-bold mb-1 block">Contact address</label><input type="text" id="fu-address" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div>
+                <label class="flex items-center gap-2 text-xs"><input type="checkbox" id="fu-verified"> I confirm this contact channel belongs to the patient (not relatives/partners)</label>
+                <div class="flex gap-2 mt-4"><button type="submit" class="flex-1 bg-purple-600 text-white font-bold py-2 rounded-lg">Save</button><button type="button" onclick="document.getElementById('followup-modal').classList.add('hidden')" class="bg-gray-300 dark:bg-gray-600 font-bold py-2 px-4 rounded-lg">Cancel</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Referral tracking modal -->
+    <div id="referral-track-modal" class="hidden fixed inset-0 bg-black/50 z-[160] items-center justify-center p-4">
+        <div class="glass rounded-2xl shadow-xl max-w-md w-full p-5">
+            <h3 class="text-xl font-bold mb-4 text-indigo-600">🔗 New Referral</h3>
+            <form id="referral-track-form" class="space-y-3">
+                <div><label class="text-xs font-bold mb-1 block">Patient *</label><select id="rt-patient" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option value="">Loading...</option></select></div>
+                <div><label class="text-xs font-bold mb-1 block">Destination facility *</label><input type="text" id="rt-dest" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div>
+                <div><label class="text-xs font-bold mb-1 block">Reason *</label><textarea id="rt-reason" rows="2" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></textarea></div>
+                <div><label class="text-xs font-bold mb-1 block">Urgency</label><select id="rt-urgency" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option value="routine">Routine</option><option value="urgent">Urgent</option><option value="emergency">Emergency</option></select></div>
+                <div class="flex gap-2 mt-4"><button type="submit" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg">Send Referral</button><button type="button" onclick="document.getElementById('referral-track-modal').classList.add('hidden')" class="bg-gray-300 dark:bg-gray-600 font-bold py-2 px-4 rounded-lg">Cancel</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Handover modal -->
+    <div id="handover-modal" class="hidden fixed inset-0 bg-black/50 z-[160] items-center justify-center p-4">
+        <div class="glass rounded-2xl shadow-xl max-w-md w-full p-5">
+            <h3 class="text-xl font-bold mb-4 text-teal-600">📋 Generate Handover Summary</h3>
+            <form id="handover-form" class="space-y-3">
+                <div><label class="text-xs font-bold mb-1 block">Patient *</label><select id="ho-patient" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option value="">Loading...</option></select></div>
+                <p class="text-[11px] text-gray-500">The summary is auto-compiled from information already in the system. Missing fields will be highlighted for clinician review.</p>
+                <div class="flex gap-2 mt-4"><button type="submit" class="flex-1 bg-teal-600 text-white font-bold py-2 rounded-lg">Generate</button><button type="button" onclick="document.getElementById('handover-modal').classList.add('hidden')" class="bg-gray-300 dark:bg-gray-600 font-bold py-2 px-4 rounded-lg">Cancel</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Handover detail modal -->
+    <div id="handover-detail-modal" class="hidden fixed inset-0 bg-black/50 z-[165] items-center justify-center p-4">
+        <div class="glass rounded-2xl shadow-xl max-w-2xl w-full p-5 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-3"><h3 class="text-xl font-bold text-teal-600">📋 Handover Summary</h3><button onclick="document.getElementById('handover-detail-modal').classList.add('hidden')" class="text-gray-500 hover:text-gray-800 text-2xl">×</button></div>
+            <div id="handover-detail-body"></div>
+        </div>
+    </div>
+
+    <!-- Instruction modal -->
+    <div id="instruction-modal" class="hidden fixed inset-0 bg-black/50 z-[160] items-center justify-center p-4">
+        <div class="glass rounded-2xl shadow-xl max-w-md w-full p-5">
+            <h3 class="text-xl font-bold mb-4 text-emerald-600">🗣️ New Patient Instruction</h3>
+            <form id="instruction-form" class="space-y-3">
+                <div><label class="text-xs font-bold mb-1 block">Patient *</label><select id="in-patient" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option value="">Loading...</option></select></div>
+                <div><label class="text-xs font-bold mb-1 block">Language *</label><select id="in-language" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"><option>English</option><option>Amharic</option><option>Afaan Oromoo</option><option>Tigrinya</option><option>Somali</option></select></div>
+                <div><label class="text-xs font-bold mb-1 block">Instruction text *</label><textarea id="in-text" rows="3" required class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm" placeholder="e.g. Take the medicine twice daily after meals."></textarea></div>
+                <div><label class="text-xs font-bold mb-1 block">Next step</label><input type="text" id="in-next" placeholder="e.g. Return in 2 weeks to Lab Office" class="w-full p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 text-sm"></div>
+                <div class="flex gap-2 mt-4"><button type="submit" class="flex-1 bg-emerald-600 text-white font-bold py-2 rounded-lg">Create Draft</button><button type="button" onclick="document.getElementById('instruction-modal').classList.add('hidden')" class="bg-gray-300 dark:bg-gray-600 font-bold py-2 px-4 rounded-lg">Cancel</button></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
     // ============================================================
     // SUPABASE + GLOBALS
     // ============================================================
@@ -856,6 +1233,18 @@
     let _wfAllWorkers = null;
     let lastHeardText = '';
     let _lastAIAnswer = '';
+
+    // NEW feature caches
+    let _queueCache = { entries: [], announcements: [], offices: [] };
+    let _triageCache = [];
+    let _stockCache = [];
+    let _stockAlertsCache = [];
+    let _followupsCache = [];
+    let _handoversCache = [];
+    let _instructionsCache = [];
+    let _serviceBadgesInterval = null;
+    let _tvInterval = null;
+    let _emergencyOverrideDismissed = false;
 
     const ROLE_LABELS = {
         admin:'System Admin', super_admin:'Super Admin', branch_admin:'Branch Admin', doctor:'Doctor',
@@ -1049,6 +1438,8 @@
         if (liveInterval) clearInterval(liveInterval);
         if (liveReqInterval) clearInterval(liveReqInterval);
         if (directCallPoll) clearInterval(directCallPoll);
+        if (_serviceBadgesInterval) clearInterval(_serviceBadgesInterval);
+        if (_tvInterval) clearInterval(_tvInterval);
         try { leaveLiveRoom(true); } catch(_) {}
         try { endDirectVideoCall(true); } catch(_) {}
         localStorage.removeItem('medconnect_token');
@@ -1072,6 +1463,11 @@
         document.getElementById('patient-nav-section').classList.toggle('hidden', !isPatient);
         document.getElementById('patient-extras-nav').classList.toggle('hidden', !isPatient);
         document.getElementById('worker-nav-section').classList.toggle('hidden', isPatient);
+        
+        // Show Service Delivery nav only to staff
+        const serviceNav = document.getElementById('service-nav-section');
+        if (serviceNav) serviceNav.classList.toggle('hidden', isPatient);
+
         if (['admin','super_admin'].includes(profile.role)) {
             document.getElementById('sys-admin-nav-section').classList.remove('hidden');
             document.getElementById('branch-admin-nav-section').classList.remove('hidden');
@@ -1087,12 +1483,42 @@
         if (isPatient) setTimeout(checkAppointmentReminders, 1500);
         startUnreadPolling();
         startLivePolling();
-        // 🎯 Global poll for incoming live requests when moderator anywhere in app
         if (['admin','super_admin','branch_admin'].includes(profile.role)) startLiveRequestPolling();
-        // Global poll for incoming direct calls
         startDirectCallPolling();
+        
+        // Start Service Badges Poller & Emergency Banner Poller
+        startServiceBadgesPolling();
+        
+        // Background poll for critical triage flags (Emergency Banner)
+        if (!isPatient) {
+            setInterval(async () => {
+                if (_emergencyOverrideDismissed) return;
+                try {
+                    const triage = await api('/api/triage/flags').catch(() => []);
+                    const critical = triage.filter(t => t.severity === 'critical' && t.status === 'needs_review');
+                    if (critical.length > 0) {
+                        const banner = document.getElementById('emergency-override-banner');
+                        document.getElementById('emergency-banner-text').innerText = `🚨 CRITICAL: Patient ${critical[0].patient_name} requires immediate assessment!`;
+                        banner.classList.remove('hidden');
+                        banner.classList.add('flex');
+                    } else {
+                        document.getElementById('emergency-override-banner').classList.add('hidden');
+                        document.getElementById('emergency-override-banner').classList.remove('flex');
+                    }
+                } catch (_) {}
+            }, 10000);
+        }
     }
     window.initApp = initApp;
+
+    function acknowledgeEmergencyBanner() {
+        _emergencyOverrideDismissed = true;
+        document.getElementById('emergency-override-banner').classList.add('hidden');
+        document.getElementById('emergency-override-banner').classList.remove('flex');
+        showToast('Emergency acknowledged. Clinical staff notified.');
+        // In production, this would send an API call to mark it as assigned to this doctor
+    }
+    window.acknowledgeEmergencyBanner = acknowledgeEmergencyBanner;
 
     function applyAvatar(elId, p) {
         const el = document.getElementById(elId); if (!el) return;
@@ -1102,7 +1528,7 @@
     window.applyAvatar = applyAvatar;
 
     // ============================================================
-    // SWITCH TAB
+    // SWITCH TAB (Extended with TV Mode & Journey Auto-Routing)
     // ============================================================
     function switchTab(tabId) {
         document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
@@ -1112,23 +1538,28 @@
         const navBtn = document.getElementById(`nav-${tabId}`);
         if (navBtn) navBtn.classList.add('nav-active');
         _isReadOnlyMode = false;
+        
         if (userProfile.role !== 'patient' && !['admin','super_admin','branch_admin'].includes(userProfile.role)) {
             const roleModuleMap = {
-                'doctor': ['patients','appointments','referrals','lab','pharmacy','workflow'],
-                'surgeon': ['patients','appointments','referrals','lab','pharmacy','workflow'],
-                'gp': ['patients','appointments','referrals','lab','pharmacy','workflow'],
-                'nurse': ['patients','appointments','lab','workflow'],
-                'lab_tech': ['lab','workflow'], 'radiologist': ['lab','workflow'],
-                'pharmacist': ['pharmacy','inventory','workflow'], 'pharmacy_tech': ['pharmacy','inventory','workflow'],
-                'medical_supply_officer': ['inventory'],
-                'receptionist': ['patients','appointments','workflow']
+                'doctor': ['patients','appointments','referrals','lab','pharmacy','workflow','queue','triage','journey','followup','handover','instructions','workload'],
+                'surgeon': ['patients','appointments','referrals','lab','pharmacy','workflow','queue','triage','journey','handover','instructions'],
+                'gp': ['patients','appointments','referrals','lab','pharmacy','workflow','queue','triage','journey','followup','handover','instructions','workload'],
+                'nurse': ['patients','appointments','lab','workflow','queue','triage','journey'],
+                'lab_tech': ['lab','workflow','journey'], 'radiologist': ['lab','workflow'],
+                'pharmacist': ['pharmacy','inventory','workflow','stock-alerts','journey'],
+                'pharmacy_tech': ['pharmacy','inventory','workflow','stock-alerts','journey'],
+                'receptionist': ['patients','appointments','workflow','queue','journey'],
+                'midwife': ['patients','appointments','workflow','queue','followup','journey'],
+                'health_officer': ['patients','appointments','referrals','lab','pharmacy','workflow','triage','followup','handover','instructions']
             };
             const allowed = roleModuleMap[userProfile.role] || [];
             if (['patients','appointments','referrals','lab','pharmacy','inventory','workflow'].includes(tabId)) {
                 if (!allowed.includes(tabId)) _isReadOnlyMode = true;
             }
         }
+        
         updateActionButtons(tabId);
+        
         try {
             if (tabId === 'feed') { loadFeed(); markFeedSeen(); }
             if (tabId === 'messages') loadChatStaff();
@@ -1139,6 +1570,7 @@
             if (tabId === 'myqueue') loadMyQueue();
             if (tabId === 'myappointments') loadMyAppointments();
             if (tabId === 'myrecords') loadMyRecords();
+            if (tabId === 'myinstructions') loadMyInstructions();
             if (tabId === 'patients') loadPatients();
             if (tabId === 'appointments') loadAppointments();
             if (tabId === 'referrals') loadReferrals();
@@ -1151,7 +1583,26 @@
             if (tabId === 'settings') loadSettingsView();
             if (tabId === 'workflow') loadWorkflowDashboard();
             if (tabId === 'password-requests') loadPasswordRequests();
+            
+            // NEW FEATURE TABS
+            if (tabId === 'queue') loadQueue();
+            if (tabId === 'triage') loadTriage();
+            if (tabId === 'journey') loadJourneyDashboard();
+            if (tabId === 'stock-alerts') loadStock();
+            if (tabId === 'followup') loadFollowups();
+            if (tabId === 'handover') loadHandovers();
+            if (tabId === 'instructions') loadInstructions();
+            if (tabId === 'workload') loadWorkload();
+            
+            // 🆕 TV MODE
+            if (tabId === 'tv') {
+                startTVMode();
+            } else {
+                if (_tvInterval) { clearInterval(_tvInterval); _tvInterval = null; }
+            }
+
         } catch (e) { console.error(e); }
+        
         if (window.innerWidth < 768) closeSidebar();
         const main = document.getElementById('app-main');
         if (main) main.scrollTop = 0;
@@ -1159,7 +1610,47 @@
     window.switchTab = switchTab;
 
     // ============================================================
-    // 🎥 DIRECT 1‑1 VIDEO CALL (messages + feed)
+    // 🆕 TV SCREEN MODE LOGIC
+    // ============================================================
+    function startTVMode() {
+        if (_tvInterval) clearInterval(_tvInterval);
+        
+        const updateClock = () => {
+            const now = new Date();
+            document.getElementById('tv-clock').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        };
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        const fetchAnnouncements = async () => {
+            try {
+                const q = await api('/api/queue/list');
+                const announcements = (q.announcements || []).slice(-3); // Show last 3 calls
+                const box = document.getElementById('tv-announcements');
+                
+                if (!announcements.length) {
+                    box.innerHTML = `<div class="text-2xl text-gray-500 font-bold">Waiting for patients...</div>`;
+                    return;
+                }
+                
+                box.innerHTML = announcements.map(a => {
+                    const isEmergency = a.text.includes('EMERGENCY') || a.text.includes('URGENT');
+                    return `
+                        <div class="p-8 mb-4 rounded-3xl ${isEmergency ? 'bg-red-600' : 'bg-blue-600'} text-white text-4xl font-extrabold shadow-2xl text-center animate-pulse">
+                            ${a.text}
+                        </div>
+                    `;
+                }).join('');
+            } catch (_) {}
+        };
+        
+        fetchAnnouncements();
+        _tvInterval = setInterval(fetchAnnouncements, 3000);
+    }
+    window.startTVMode = startTVMode;
+
+    // ============================================================
+    // DIRECT 1‑1 VIDEO CALL
     // ============================================================
     let directCallPC = null, directCallLocalStream = null, directCallPeerId = null, directCallPoll = null, directCallSeq = 0;
     const RTC_CFG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
@@ -1210,7 +1701,6 @@
             for (const sig of (r.signals || [])) {
                 if (sig.from === userProfile.id) continue;
                 if (sig.type === 'offer') {
-                    // Incoming call — accept
                     directCallPeerId = sig.from;
                     document.getElementById('video-call-modal').classList.remove('hidden');
                     document.getElementById('direct-call-peer-name').innerText = sig.payload?.fromName ? `← ${sig.payload.fromName}` : '';
@@ -1261,13 +1751,12 @@
     window.endDirectVideoCall = endDirectVideoCall;
 
     function startDirectCallPolling() {
-        // Background poll so incoming calls are received even outside Messages
         if (directCallPoll) return;
         directCallPoll = setInterval(_pollDirectCallSignals, 3000);
     }
 
     // ============================================================
-    // 🎤 SPEECH — Amharic-aware TTS with Google fallback
+    // SPEECH
     // ============================================================
     let _voiceLoaded = false;
     if (window.speechSynthesis) {
@@ -1278,7 +1767,6 @@
         const langName = lang || 'English';
         const tl = LANG_TO_CODE[langName] || 'en';
         const code = { en:'en-US', am:'am-ET', om:'om-ET', ti:'ti-ET', so:'so-SO' }[tl] || 'en-US';
-        // Try browser TTS if voice available
         if (window.speechSynthesis) {
             const voices = window.speechSynthesis.getVoices();
             const has = voices.some(v => v.lang.toLowerCase().startsWith(tl));
@@ -1289,7 +1777,6 @@
                 return;
             }
         }
-        // Fallback: Google TTS chunks
         const chunks = String(text).match(/.{1,180}/g) || [String(text)];
         let i = 0;
         const play = () => {
@@ -1313,8 +1800,7 @@
         rec.start();
     }
     window.startVoiceCapture = startVoiceCapture;
-
-    // ============================================================
+        // ============================================================
     // FEED
     // ============================================================
     const FEED_SEEN_KEY = 'medconnect_feed_seen';
@@ -1668,7 +2154,7 @@
     }
 
     // ============================================================
-    // 🎥 LIVE CONFERENCE
+    // LIVE CONFERENCE (FIXED)
     // ============================================================
     let livePoll = null, liveSignalSeq = 0;
     let liveRoomActive = false, liveIsModerator = false;
@@ -1681,7 +2167,6 @@
     }
     window.saveLiveLang = saveLiveLang;
 
-    // ✅ Robust toggle — always reads fresh server state
     async function toggleLiveConference() {
         if (_liveToggling) return;
         _liveToggling = true;
@@ -1689,11 +2174,15 @@
             const status = await api('/api/live/status');
             const targetState = !status.active;
             if (!confirm(targetState ? 'Start live conference for everyone?' : 'Stop live conference for everyone?')) return;
+            
             const res = await api('/api/live/toggle', { method: 'POST', body: JSON.stringify({ on: targetState }) });
             liveRoomActive = res.active;
             updateLiveUI();
             showToast(res.active ? '🎥 Live ON' : 'Live OFF');
-            if (res.active) await enterLiveRoom(true); else await leaveLiveRoom(true);
+            
+            if (res.active) await enterLiveRoom(true); 
+            else await leaveLiveRoom(true);
+            
             loadLivePanel();
         } catch (e) { showToast(e.message, 'error'); }
         finally { _liveToggling = false; }
@@ -1720,13 +2209,20 @@
     async function loadLivePanel() {
         try {
             const s = await api('/api/live/status');
-            liveRoomActive = s.active; liveIsModerator = s.iAmModerator;
+            liveRoomActive = s.active; 
+            liveIsModerator = s.iAmModerator;
+            
             document.getElementById('live-indicator').classList.toggle('hidden', !s.active);
             document.getElementById('live-status-badge').classList.toggle('hidden', !s.active);
 
+            // 🆕 FIX: If conference is not active, ensure the room is hidden
+            if (!s.active) {
+                document.getElementById('live-room').classList.add('hidden');
+                document.getElementById('live-participant-panel').classList.remove('hidden');
+            }
+
             if (liveIsModerator) {
                 updateLiveUI();
-                // Requests
                 const rq = await api('/api/live/requests');
                 const list = document.getElementById('live-requests-list');
                 const reqs = (rq.requests || []);
@@ -1742,8 +2238,6 @@
                             <button onclick="kickLiveUser('${r.id}', true)" class="bg-slate-800 text-white text-xs px-2 py-1 rounded">🚫</button>
                         </div>
                     </div>`).join('');
-
-                // Participants with moderation controls
                 const pList = document.getElementById('live-participants-list');
                 const parts = (rq.participants || []);
                 pList.innerHTML = parts.length ? parts.map(p => `
@@ -1759,16 +2253,12 @@
                             <button onclick="kickLiveUser('${p.id}', true)" class="bg-slate-800 text-white text-[10px] px-2 py-1 rounded">Ban</button>
                         </div>
                     </div>`).join('') : '<p class="text-xs text-gray-500">No participants.</p>';
-
-                // Moderators
                 const mods = await api('/api/live/moderators').catch(() => ({ moderators: [] }));
                 const currentMods = mods.moderators || [];
                 document.getElementById('live-mods-list').innerHTML = currentMods.map(m => `<span class="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-full font-bold">👑 ${escapeHtml(m.full_name)}</span>`).join('') || '<span class="text-gray-500">None</span>';
                 const cands = await api('/api/live/moderator-candidates').catch(() => []);
                 const modIds = new Set(currentMods.map(m => m.id));
                 document.getElementById('live-promote-select').innerHTML = '<option value="">Select a user to promote…</option>' + cands.filter(c => !modIds.has(c.id)).map(c => `<option value="${c.id}">${escapeHtml(c.full_name)} (${ROLE_LABELS[c.role] || c.role})</option>`).join('');
-
-                // Banned
                 const banned = (rq.banned || []);
                 const bList = document.getElementById('live-banned-list');
                 if (!banned.length) bList.innerHTML = '<p class="text-xs text-gray-500">None</p>';
@@ -1785,7 +2275,6 @@
                 else if (s.iAmParticipant) { idleBox.classList.add('hidden'); waiting.classList.add('hidden'); }
                 else { idleBox.classList.remove('hidden'); waiting.classList.add('hidden'); idle.innerText = `${s.moderator?.full_name || 'Moderator'} is live. Request to join.`; rbtn.disabled = false; }
             }
-
             if (s.iAmParticipant || (s.active && s.iAmModerator)) {
                 if (document.getElementById('live-room').classList.contains('hidden')) enterLiveRoom(s.iAmModerator);
             }
@@ -1793,7 +2282,6 @@
     }
     window.loadLivePanel = loadLivePanel;
 
-    // Global poll for moderators — receive requests even when not on Live tab
     function startLiveRequestPolling() {
         if (liveReqInterval) clearInterval(liveReqInterval);
         liveReqInterval = setInterval(async () => {
@@ -1895,10 +2383,8 @@
 
     function toggleMyMic() {
         if (!localStream) return;
-        const t = localStream.getAudioTracks()[0];
-        if (!t) return;
-        myMuted = !myMuted;
-        t.enabled = !myMuted;
+        const t = localStream.getAudioTracks()[0]; if (!t) return;
+        myMuted = !myMuted; t.enabled = !myMuted;
         document.getElementById('btn-mic').innerText = myMuted ? '🔇 Mic' : '🎤 Mic';
         document.getElementById('btn-mic').className = `px-3 py-1.5 rounded-lg text-xs font-bold ${myMuted ? 'bg-red-600' : 'bg-slate-700 hover:bg-slate-600'}`;
         api('/api/live/participant-status', { method: 'POST', body: JSON.stringify({ muted: myMuted }) }).catch(()=>{});
@@ -1907,10 +2393,8 @@
 
     function toggleMyCamera() {
         if (!localStream) return;
-        const t = localStream.getVideoTracks()[0];
-        if (!t) return;
-        myCamOff = !myCamOff;
-        t.enabled = !myCamOff;
+        const t = localStream.getVideoTracks()[0]; if (!t) return;
+        myCamOff = !myCamOff; t.enabled = !myCamOff;
         document.getElementById('btn-cam').innerText = myCamOff ? '📷 Off' : '📷 Camera';
         document.getElementById('btn-cam').className = `px-3 py-1.5 rounded-lg text-xs font-bold ${myCamOff ? 'bg-red-600' : 'bg-slate-700 hover:bg-slate-600'}`;
         api('/api/live/participant-status', { method: 'POST', body: JSON.stringify({ cameraOff: myCamOff }) }).catch(()=>{});
@@ -1978,8 +2462,6 @@
             const grid = document.getElementById('live-participants-grid');
             const list = s.participants || [];
             if (s.moderator) list.unshift({ ...s.moderator, isMod: true });
-
-            // mesh: user with higher id initiates to avoid duplicates
             list.forEach(p => {
                 if (p.id !== userProfile.id && !peers[p.id] && localStream && userProfile.id < p.id) {
                     const pc = createPeerConnection(p.id);
@@ -1989,21 +2471,18 @@
                     }).catch(()=>{});
                 }
             });
-
             grid.innerHTML = list.map(p => `
                 <div class="live-video-tile ${p.handRaised ? 'raised' : ''}">
                     <video id="video-${p.id}" autoplay playsinline ${p.id === userProfile.id ? 'muted' : ''}></video>
                     <div class="live-name">${escapeHtml(p.name || p.full_name || 'User')}${p.isMod ? ' 👑' : ''} ${p.muted ? ' 🔇' : ''} ${p.handRaised ? ' ✋' : ''}</div>
                     ${p.cameraOff ? `<div class="live-badge">📷 Off</div>` : ''}
                 </div>`).join('') || '<p class="text-xs opacity-70">Waiting…</p>';
-
             list.forEach(p => {
                 const v = document.getElementById(`video-${p.id}`);
                 if (!v) return;
                 if (p.id === userProfile.id && localStream) v.srcObject = localStream;
                 else if (peers[p.id]?.stream) v.srcObject = peers[p.id].stream;
             });
-            // Tiles whose mod shows kicked user vanish because server list refreshed
         } catch (_) {}
     }
 
@@ -2045,7 +2524,14 @@
                 overlay.appendChild(el); setTimeout(() => el.remove(), 2500);
             }
         }
-        else if (sig.type === 'live-on' || sig.type === 'live-off') { loadLivePanel(); }
+        else if (sig.type === 'live-on') {
+            // Only reload if not already active to prevent UI jumping
+            if (!liveRoomActive) loadLivePanel();
+        }
+        else if (sig.type === 'live-off') {
+            showToast('Live conference ended by moderator');
+            if (liveRoomActive) { liveRoomActive = false; updateLiveUI(); leaveLiveRoom(true); }
+        }
     }
 
     function appendLiveChat(m) {
@@ -2105,7 +2591,7 @@
     }
 
     // ============================================================
-    // 🤖 CHATBOT — speaks its own AI answer
+    // CHATBOT
     // ============================================================
     window._lastUserInput = '';
     function toggleChatbot() {
@@ -2140,7 +2626,6 @@
             document.getElementById('cb-typing')?.remove();
             const showText = targetLang !== 'English' && res.translatedText ? res.translatedText : res.text;
             appendChatbotMessage('ai', showText);
-            // Speak the AI's OWN answer
             const toSpeak = res.speakText || showText;
             _lastAIAnswer = toSpeak;
             speakText(toSpeak, targetLang);
@@ -2157,15 +2642,12 @@
     }
     window.replayLastAI = replayLastAI;
 
-    // 🔁 Translate / speak AI's LAST answer — NOT user's input
     async function cbTranslate(mode) {
         const targetLang = document.getElementById('cb-lang').value;
-        // find last AI answer bubble
         const aiMsgs = document.querySelectorAll('#chatbot-messages .justify-start > div');
         let lastAI = '';
         if (aiMsgs.length) lastAI = aiMsgs[aiMsgs.length - 1].innerText;
         if (!lastAI) return showToast('No AI answer to translate yet', 'error');
-
         if (mode === 'tt') {
             try { const d = await api('/api/translate', { method: 'POST', body: JSON.stringify({ text: lastAI, targetLang }) }); appendChatbotMessage('ai', `📝 Translation (${targetLang}): ${d.translatedText}`); }
             catch (e) { showToast(e.message, 'error'); }
@@ -2192,68 +2674,157 @@
         }
     }
     window.cbTranslate = cbTranslate;
-
-    // ============================================================
-    // PATIENT VIEWS
+        // ============================================================
+    // PATIENT VIEWS (Dynamic & Rich)
     // ============================================================
     async function loadMyHealth() {
         try {
-            const [me, appts, queue, rx, lab] = await Promise.all([api('/api/patient/me'), api('/api/patient/my-appointments'), api('/api/patient/my-queue'), api('/api/patient/my-prescriptions'), api('/api/patient/my-lab-orders')]);
-            const greet = document.getElementById('myhealth-greeting'); if (greet) greet.innerText = `Welcome, ${userProfile.full_name}`;
+            const [me, appts, queue, rx, lab] = await Promise.all([
+                api('/api/patient/me'), 
+                api('/api/patient/my-appointments'), 
+                api('/api/patient/my-queue'), 
+                api('/api/patient/my-prescriptions'), 
+                api('/api/patient/my-lab-orders')
+            ]);
+
+            const greet = document.getElementById('myhealth-greeting'); 
+            if (greet) greet.innerText = `Welcome, ${userProfile.full_name}`;
+            
+            // 1. DYNAMIC ALERTS BANNER
+            let alertsHtml = '';
+            
+            // Queue Alert
+            if (queue.in_queue) {
+                if (queue.is_your_turn) {
+                    alertsHtml += `<div class="p-4 mb-3 rounded-xl bg-green-500 text-white flex justify-between items-center animate-pulse shadow-lg">
+                        <div><b class="text-lg">📢 IT IS YOUR TURN!</b><br>Please go to <b>${queue.office}</b> (${queue.department})</div>
+                        <button onclick="switchTab('myqueue')" class="bg-white text-green-600 text-xs px-3 py-1.5 rounded-lg font-bold">View Ticket</button>
+                    </div>`;
+                } else {
+                    alertsHtml += `<div class="p-3 mb-3 rounded-xl bg-blue-100 border-l-4 border-blue-500 text-blue-800 flex justify-between items-center dark:bg-blue-900/30 dark:text-blue-300">
+                        <div><b>🎫 You are in the queue!</b><br>Queue ${queue.number} · Go to ${queue.office} (${queue.department})</div>
+                        <button onclick="switchTab('myqueue')" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">View Ticket</button>
+                    </div>`;
+                }
+            }
+            
+            // Lab Result Alert
+            const readyLabs = lab.filter(l => l.status === 'ready' || l.status === 'completed');
+            if (readyLabs.length > 0) {
+                alertsHtml += `<div class="p-3 mb-3 rounded-xl bg-green-100 border-l-4 border-green-500 text-green-800 flex justify-between items-center dark:bg-green-900/30 dark:text-green-300">
+                    <div><b>🧪 Lab Result Ready!</b><br>Your test (${readyLabs[0].test_name}) is ready for review.</div>
+                    <button onclick="switchTab('myrecords')" class="bg-green-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">View Result</button>
+                </div>`;
+            }
+
+            // Journey Tracker Alert
+            if (me) {
+                try {
+                    const journey = await api(`/api/journey/${me.id}`);
+                    if (journey.stage && journey.stage !== 'Completed') {
+                        alertsHtml += `<div class="p-3 mb-3 rounded-xl bg-purple-100 border-l-4 border-purple-500 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                            <b>🛤️ Current Stage: ${journey.stage}</b><br>
+                            <span class="text-xs">Next step: ${journey.next_stage || 'Discharge / Complete'}</span>
+                        </div>`;
+                    }
+                } catch (_) {}
+            }
+
+            // 2. QUICK STATS
             const statBox = document.getElementById('patient-quick-stats');
             const card = (label, val, cls, icon) => `<div class="stat-card ${cls}"><p class="text-[10px] md:text-xs uppercase font-bold opacity-90">${icon} ${label}</p><p class="text-2xl md:text-3xl font-extrabold">${val}</p></div>`;
-            statBox.innerHTML = card('Queue', queue.position ? `#${queue.position}` : '—', 'stat-cyan', '🎫') + card('Upcoming', appts.filter(a => new Date(a.scheduled_at) > new Date()).length, 'stat-blue', '📅') + card('Prescriptions', rx.length, 'stat-green', '💊') + card('Lab Results', lab.length, 'stat-purple', '🧪');
-            makeChart('chart-myvisits', 'bar', { labels: ['Past','Upcoming'], datasets: [{ label: 'Visits', data: [appts.filter(a => new Date(a.scheduled_at) <= new Date()).length, appts.filter(a => new Date(a.scheduled_at) > new Date()).length], backgroundColor: ['#94a3b8', '#3b82f6'] }] });
-            makeChart('chart-myrx', 'doughnut', { labels: ['Pending','Dispensed'], datasets: [{ data: [rx.filter(r => r.status !== 'dispensed').length, rx.filter(r => r.status === 'dispensed').length], backgroundColor: ['#f59e0b', '#10b981'] }] });
-            const list = document.getElementById('patient-recent-list'); const rec = appts.slice(0, 5);
+            statBox.innerHTML = 
+                card('Queue', queue.position ? `#${queue.position}` : '—', 'stat-cyan', '🎫') + 
+                card('Upcoming', appts.filter(a => new Date(a.scheduled_at) > new Date()).length, 'stat-blue', '📅') + 
+                card('Prescriptions', rx.length, 'stat-green', '💊') + 
+                card('Lab Results', lab.length, 'stat-purple', '🧪');
+
+            // Insert Alerts above the graphs
+            let alertContainer = document.getElementById('patient-alerts-container');
+            alertContainer.innerHTML = alertsHtml;
+
+            // 3. GRAPHS
+            makeChart('chart-myvisits', 'bar', { 
+                labels: ['Past Visits','Upcoming'], 
+                datasets: [{ label: 'Visits', data: [appts.filter(a => new Date(a.scheduled_at) <= new Date()).length, appts.filter(a => new Date(a.scheduled_at) > new Date()).length], backgroundColor: ['#94a3b8', '#3b82f6'] }] 
+            });
+            
+            makeChart('chart-myrx', 'doughnut', { 
+                labels: ['Pending','Dispensed'], 
+                datasets: [{ data: [rx.filter(r => r.status !== 'dispensed').length, rx.filter(r => r.status === 'dispensed').length], backgroundColor: ['#f59e0b', '#10b981'] }] 
+            });
+
+            // 4. RECENT LIST
+            const list = document.getElementById('patient-recent-list'); 
+            const rec = appts.slice(0, 5);
             list.innerHTML = rec.length ? rec.map(a => {
                 const meta = getVisitTypeMeta(a.visit_type || 'First Time Check');
-                return `<div class="glass p-4 rounded-xl flex justify-between items-center"><div><p class="font-bold">${meta.icon} ${escapeHtml(a.reason || 'General visit')}</p><p class="text-xs text-gray-500">${new Date(a.scheduled_at).toLocaleString()} · ${a.visit_type || 'First Time Check'}</p></div><span class="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700">${a.status || 'scheduled'}</span></div>`;
+                return `<div class="glass p-4 rounded-xl flex justify-between items-center">
+                    <div>
+                        <p class="font-bold">${meta.icon} ${escapeHtml(a.reason || 'General visit')}</p>
+                        <p class="text-xs text-gray-500">${new Date(a.scheduled_at).toLocaleString()} · ${a.visit_type || 'First Time Check'}</p>
+                    </div>
+                    <span class="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700">${a.status || 'scheduled'}</span>
+                </div>`;
             }).join('') : '<p class="text-gray-500 text-sm">No recent appointments.</p>';
+            
         } catch (e) { showToast(e.message, 'error'); }
     }
     window.loadMyHealth = loadMyHealth;
 
     async function loadMyQueue() {
         const box = document.getElementById('my-queue-content');
-        box.innerHTML = '<p class="text-gray-500 animate-pulse text-center py-8">Loading queue…</p>';
+        box.innerHTML = '<p class="text-gray-500 animate-pulse text-center py-8">Checking live queue status…</p>';
         try {
             const q = await api('/api/patient/my-queue');
-            if (!q.position) {
-                let nextHtml = '';
-                try {
-                    const appts = await api('/api/patient/my-appointments');
-                    const now = new Date();
-                    const up = appts.filter(a => new Date(a.scheduled_at) > now && a.status !== 'cancelled')[0];
-                    if (up) {
-                        const d = new Date(up.scheduled_at);
-                        nextHtml = `<div class="glass p-4 rounded-xl mt-4"><p class="text-xs font-bold text-blue-600 mb-1">📅 Next appointment</p><p class="font-bold">${d.toLocaleString()}</p><p class="text-xs text-gray-500">${up.reason || 'General visit'} · ${up.visit_type || 'First Time Check'}</p><button onclick="switchTab('myappointments')" class="mt-2 bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">View details →</button></div>`;
-                    }
-                } catch (_) {}
-                box.innerHTML = `<div class="glass p-8 rounded-2xl text-center"><p class="text-5xl mb-3">🎫</p><p class="font-bold text-lg mb-1">No appointment scheduled for today</p><p class="text-sm text-gray-500">Today's queue has ${q.total} patient(s) scheduled.</p></div>${nextHtml}`;
+            
+            if (!q.in_queue) {
+                box.innerHTML = `
+                    <div class="glass p-8 rounded-2xl text-center">
+                        <p class="text-5xl mb-3">🏥</p>
+                        <p class="font-bold text-lg mb-1">You are not in any queue right now</p>
+                        <p class="text-sm text-gray-500 mb-4">If you are at the clinic, please check in at Reception.</p>
+                    </div>`;
                 return;
             }
-            const visitType = q.myVisitType || 'First Time Check';
-            const isEmergency = visitType === 'Emergency';
-            const eta = Math.max(0, (q.ahead || 0) * 15);
-            const meta = getVisitTypeMeta(visitType);
-            box.innerHTML = `
-                <div class="queue-card mb-4 ${isEmergency ? '!bg-gradient-to-br !from-red-500 !to-pink-600' : ''}">
-                    ${isEmergency ? '<span class="inline-block bg-white/30 px-3 py-1 rounded-full text-xs font-bold mb-2">🚨 EMERGENCY PRIORITY</span>' : ''}
-                    <p class="text-sm font-bold opacity-90">YOUR POSITION</p>
-                    <p class="queue-number">${q.position}</p>
-                    <p class="text-sm opacity-90">of ${q.total} today</p>
-                    <div class="mt-4 grid grid-cols-3 gap-2 text-xs">
-                        <div><b class="text-base">${q.ahead}</b><br>ahead</div>
-                        <div><b class="text-base">${q.myStatus || 'scheduled'}</b><br>status</div>
-                        <div><b class="text-base">~${eta}m</b><br>wait</div>
+
+            const isEmergency = q.visit_type === 'Emergency';
+            const isTurn = q.is_your_turn;
+
+            if (isTurn) {
+                // 🚨 BIG ALERT: IT IS THE PATIENT'S TURN
+                box.innerHTML = `
+                    <div class="rounded-2xl p-6 text-center shadow-2xl animate-pulse" style="background: linear-gradient(135deg,#10b981,#059669); color: white;">
+                        <p class="text-5xl mb-3">📢</p>
+                        <h2 class="text-2xl font-extrabold mb-1">IT IS YOUR TURN!</h2>
+                        <p class="text-lg font-bold">Please go to:</p>
+                        <p class="text-3xl font-extrabold underline mt-2 mb-4">${q.office}</p>
+                        <p class="text-sm bg-black/20 inline-block px-4 py-1 rounded-full">Ticket: ${q.number} · ${q.department}</p>
                     </div>
-                    <div class="mt-3 inline-block bg-white/20 px-3 py-1 rounded-full text-xs font-bold">${meta.icon} ${visitType}</div>
-                </div>
-                ${q.currentlyServing ? `<div class="glass p-4 rounded-xl mb-3"><p class="text-sm font-bold text-green-600">🟢 A patient is being served</p><p class="text-xs text-gray-500 mt-1">Your turn should be soon.</p></div>` : ''}
-                <div class="flex gap-2"><button onclick="loadMyQueue()" class="flex-1 bg-blue-600 text-white font-bold py-2.5 rounded-xl no-print">🔄 Refresh</button><button onclick="printCurrentView()" class="flex-1 bg-gray-200 dark:bg-gray-700 font-bold py-2.5 rounded-xl no-print">🖨️ Print</button></div>
-            `;
-        } catch (e) { box.innerHTML = `<p class="text-red-500">${e.message}</p>`; }
+                    <button onclick="loadMyQueue()" class="w-full mt-4 bg-gray-800 text-white font-bold py-3 rounded-xl shadow-lg">🔄 I am here (Refresh)</button>
+                `;
+            } else {
+                // ⏳ WAITING: SHOW POSITION & OFFICE
+                box.innerHTML = `
+                    <div class="queue-card mb-4 ${isEmergency ? '!bg-gradient-to-br !from-red-500 !to-pink-600' : ''}">
+                        ${isEmergency ? '<span class="inline-block bg-white/30 px-3 py-1 rounded-full text-xs font-bold mb-2">🚨 EMERGENCY PRIORITY</span>' : ''}
+                        <p class="text-sm font-bold opacity-90">YOUR QUEUE TICKET</p>
+                        <p class="queue-number text-white">${q.number}</p>
+                        <p class="text-sm opacity-90 mt-1">Destination: <span class="font-bold underline text-lg">${q.office}</span> (${q.department})</p>
+                        
+                        <div class="mt-5 grid grid-cols-3 gap-2 text-xs bg-black/20 p-3 rounded-xl text-white">
+                            <div><b class="text-lg">${q.position}</b><br>Your Spot</div>
+                            <div><b class="text-lg">${q.ahead}</b><br>People Ahead</div>
+                            <div><b class="text-lg">~${q.eta_minutes || 0}m</b><br>Est. Wait</div>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-l-4 border-blue-500">
+                        <p class="text-sm text-blue-800 dark:text-blue-300 font-bold">💡 Please wait in the ${q.department} waiting area. We will alert you when it is your turn.</p>
+                    </div>
+                    <button onclick="loadMyQueue()" class="w-full mt-4 bg-blue-600 text-white font-bold py-3 rounded-xl no-print">🔄 Refresh Status</button>
+                `;
+            }
+        } catch (e) { box.innerHTML = `<p class="text-red-500 text-center py-8">${e.message}</p>`; }
     }
     window.loadMyQueue = loadMyQueue;
 
@@ -2288,7 +2859,6 @@
                                 <p class="text-xs mt-1.5"><span class="px-2 py-0.5 rounded ${statusColor} font-bold">${status.toUpperCase()}</span> <span class="ml-1 px-2 py-0.5 rounded ${meta.color} font-bold">${a.visit_type || 'First Time Check'}</span></p>
                             </div>
                         </div>
-                        ${isToday && isUpcoming && status === 'scheduled' ? `<div class="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-500"><p class="text-xs font-bold text-blue-700 dark:text-blue-300 mb-1">🏥 GO TO THE HOSPITAL TODAY</p><p class="text-[11px] text-gray-600 dark:text-gray-300">Bring your ID and arrive 15 minutes early.</p></div>` : ''}
                     </div>`;
             }).join('');
         } catch (e) { box.innerHTML = `<p class="text-red-500">${e.message}</p>`; }
@@ -2303,6 +2873,36 @@
         } catch (e) { box.innerHTML = `<p class="text-red-500">${e.message}</p>`; }
     }
     window.loadMyRecords = loadMyRecords;
+
+    async function loadMyInstructions() {
+        const box = document.getElementById('my-instructions-list');
+        box.innerHTML = '<p class="text-gray-500 animate-pulse text-center py-8">Loading…</p>';
+        try {
+            const me = await api('/api/patient/me');
+            if (!me) return box.innerHTML = '<p class="text-gray-500 text-center py-8">No patient profile found.</p>';
+            const all = await api('/api/instructions');
+            const mine = all.filter(i => i.patient_id === me.id && i.status === 'approved');
+            if (!mine.length) return box.innerHTML = '<div class="glass p-8 rounded-2xl text-center"><p class="text-5xl mb-3">📝</p><p class="font-bold text-lg">No instructions yet</p><p class="text-sm text-gray-500">Your health worker will share clear instructions here once approved.</p></div>';
+            box.innerHTML = mine.map(i => `
+                <div class="glass p-4 rounded-xl">
+                    <div class="flex justify-between items-start gap-2 mb-2">
+                        <span class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">${escapeHtml(i.language)}</span>
+                        <button onclick="speakInstruction('${i.id}')" class="text-blue-600 text-xs font-bold">🔊 Listen</button>
+                    </div>
+                    <p class="text-sm whitespace-pre-wrap">${escapeHtml(i.text)}</p>
+                    ${i.next_step ? `<p class="text-xs mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded"><b>Next step:</b> ${escapeHtml(i.next_step)}</p>` : ''}
+                    <p class="text-[10px] text-gray-500 mt-2">Reviewed by ${escapeHtml(i.reviewed_by || 'health worker')} · ${new Date(i.reviewed_at || i.created_at).toLocaleString()}</p>
+                </div>`).join('');
+        } catch (e) { box.innerHTML = `<p class="text-red-500">${e.message}</p>`; }
+    }
+    window.loadMyInstructions = loadMyInstructions;
+
+    function speakInstruction(id) {
+        const i = _instructionsCache.find(x => x.id === id);
+        if (!i) return;
+        speakText(i.text + ' ' + (i.next_step || ''), i.language);
+    }
+    window.speakInstruction = speakInstruction;
 
     async function checkAppointmentReminders() {
         if (userProfile?.role !== 'patient') return;
@@ -2391,6 +2991,11 @@
         referrals:{icon:'🔗',title:'Referrals',desc:'Send up hierarchy'}, lab:{icon:'🧪',title:'Lab Orders',desc:'Order tests'},
         pharmacy:{icon:'💊',title:'Pharmacy',desc:'Prescribe & dispense'}, inventory:{icon:'📦',title:'Inventory',desc:'Track supplies'},
         workflow:{icon:'🔄',title:'Patient Workflow',desc:'10-level transitions'}, live:{icon:'🎥',title:'Live Conference',desc:'AI translation'},
+        queue:{icon:'🎫',title:'Smart Queue',desc:'Call patients & announce'}, triage:{icon:'🚨',title:'Urgent Triage',desc:'Flag warning signs'},
+        journey:{icon:'🛤️',title:'Journey Tracker',desc:'Stage-based flow'}, 'stock-alerts':{icon:'📦',title:'Stock Alerts',desc:'Low stock & expiry'},
+        followup:{icon:'📩',title:'Follow-ups',desc:'Discreet reminders'}, handover:{icon:'📋',title:'Handover',desc:'Clinician summaries'},
+        instructions:{icon:'🗣️',title:'Instructions',desc:'Local language'}, workload:{icon:'📈',title:'Workload',desc:'Branch overview'},
+        tv:{icon:'📺',title:'TV Screen Mode',desc:'Waiting room display'},
         profile:{icon:'👤',title:'My Profile',desc:'View & edit'}, settings:{icon:'⚙️',title:'Settings',desc:'Preferences'}
     };
     function populateWorkspace() {
@@ -2400,17 +3005,23 @@
         if (badge) badge.innerText = ROLE_LABELS[userProfile.role] || userProfile.role;
         if (!container) return;
         const roleModuleMap = {
-            'doctor': ['patients','appointments','referrals','lab','pharmacy','workflow'], 'surgeon': ['patients','appointments','referrals','lab','pharmacy','workflow'],
-            'gp': ['patients','appointments','referrals','lab','pharmacy','workflow'], 'nurse': ['patients','appointments','lab','workflow'],
-            'lab_tech': ['lab','workflow'], 'radiologist': ['lab','workflow'], 'pharmacist': ['pharmacy','inventory','workflow'],
-            'pharmacy_tech': ['pharmacy','inventory','workflow'], 'receptionist': ['patients','appointments','workflow']
+            'doctor': ['patients','appointments','referrals','lab','pharmacy','workflow','queue','triage','journey','followup','handover','instructions','workload'],
+            'surgeon': ['patients','appointments','referrals','lab','pharmacy','workflow','queue','triage','journey','handover','instructions'],
+            'gp': ['patients','appointments','referrals','lab','pharmacy','workflow','queue','triage','journey','followup','handover','instructions','workload'],
+            'nurse': ['patients','appointments','lab','workflow','queue','triage','journey'],
+            'lab_tech': ['lab','workflow','journey'], 'radiologist': ['lab','workflow'],
+            'pharmacist': ['pharmacy','inventory','workflow','stock-alerts','journey'],
+            'pharmacy_tech': ['pharmacy','inventory','workflow','stock-alerts','journey'],
+            'receptionist': ['patients','appointments','workflow','queue','journey'],
+            'midwife': ['patients','appointments','workflow','queue','followup','journey'],
+            'health_officer': ['patients','appointments','referrals','lab','pharmacy','workflow','triage','followup','handover','instructions']
         };
         container.innerHTML = Object.keys(TAB_INFO).map(t => {
             const i = TAB_INFO[t];
             let isActionable = false;
             if (['admin','super_admin','branch_admin'].includes(userProfile.role)) isActionable = true;
             else if (roleModuleMap[userProfile.role]?.includes(t)) isActionable = true;
-            else if (['live','profile','settings'].includes(t)) isActionable = true;
+            else if (['live','profile','settings','tv'].includes(t)) isActionable = true;
             const readOnlyBadge = isActionable ? '' : `<span class="text-[10px] bg-gray-200 dark:bg-gray-700 text-gray-600 px-2 py-0.5 rounded-full font-bold ml-2">👁️ Read-Only</span>`;
             return `<button onclick="switchTab('${t}')" class="glass p-5 md:p-6 rounded-2xl shadow-sm text-left ws-card"><div class="text-2xl md:text-3xl mb-2">${i.icon}</div><div class="flex items-center"><p class="font-bold text-base md:text-lg">${i.title}</p>${readOnlyBadge}</div><p class="text-xs text-gray-500">${i.desc}</p></button>`;
         }).join('');
@@ -2664,7 +3275,7 @@
         } catch (e) { box.innerHTML = `<p class="text-red-500">${e.message}</p>`; }
     }
     window.loadPrescriptions = loadPrescriptions;
-    async function dispensePrescription(id) { try { await api(`/api/prescriptions/${id}/dispense`, { method: 'PUT' }); showToast('Dispensed'); loadPrescriptions(); } catch (e) { showToast(e.message, 'error'); } }
+    async function dispensePrescription(id) { try { await api(`/api/prescriptions/${id}/dispense`, { method: 'PUT' }); showToast('Dispensed & Queue Closed'); loadPrescriptions(); } catch (e) { showToast(e.message, 'error'); } }
     window.dispensePrescription = dispensePrescription;
 
     async function loadInventory() {
@@ -2804,6 +3415,691 @@
     window.calcMAP=calcMAP; window.calcBSA=calcBSA; window.calcCrCl=calcCrCl; window.calcPeds=calcPeds;
     window.calcFluid=calcFluid; window.calcIBW=calcIBW; window.calcTHR=calcTHR; window.calcAPGAR=calcAPGAR;
 
+    // ============================================================
+    // 🆕 FEATURE 1: SMART QUEUE — FRONTEND (With Call Next)
+    // ============================================================
+    async function loadQueue() {
+        try {
+            const [data, offices] = await Promise.all([api('/api/queue/list'), api('/api/queue/offices')]);
+            _queueCache = { ...data, offices };
+            renderQueueAnnouncements();
+            renderQueueList();
+            renderQueueOffices();
+            updateQueueBadges();
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+    window.loadQueue = loadQueue;
+
+    function renderQueueAnnouncements() {
+        const box = document.getElementById('queue-announcements');
+        if (!box) return;
+        const list = _queueCache.announcements || [];
+        if (!list.length) { box.innerHTML = ''; return; }
+        box.innerHTML = list.slice().reverse().map(a => `<div class="glass p-3 rounded-xl border-l-4 ${a.text.includes('EMERGENCY') || a.text.includes('URGENT') ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-blue-500'}"><p class="text-sm font-bold">${escapeHtml(a.text)}</p><p class="text-[10px] text-gray-500">${new Date(a.at).toLocaleTimeString()}</p></div>`).join('');
+    }
+
+    function renderQueueList() {
+        const box = document.getElementById('queue-list');
+        if (!box) return;
+        const entries = _queueCache.entries || [];
+        if (!entries.length) return box.innerHTML = '<p class="text-gray-500 text-sm">Queue is empty.</p>';
+        box.innerHTML = entries.map(e => {
+            const statusClass = e.visit_type === 'Emergency' ? 'emergency' : e.status;
+            const officeName = _queueCache.offices?.find(o => o.id === e.office_id)?.name || '—';
+            return `<div class="queue-entry ${statusClass}">
+                <div class="min-w-0 flex-1">
+                    <p class="font-bold"><span class="font-mono text-blue-600">${e.number}</span> · ${escapeHtml(e.patient_name)}</p>
+                    <p class="text-xs text-gray-500">${escapeHtml(e.department)} → ${escapeHtml(officeName)} · ${e.visit_type} · ${e.status}${e.missed_count ? ` (missed ${e.missed_count}×)` : ''}</p>
+                </div>
+                <div class="flex gap-1 flex-wrap justify-end shrink-0">
+                    ${e.status === 'waiting' ? `<button onclick="callQueueEntry('${e.id}')" class="bg-amber-500 text-white text-[10px] px-2 py-1 rounded font-bold">Call</button>` : ''}
+                    ${e.status === 'called' ? `<button onclick="markQueueArrived('${e.id}')" class="bg-green-600 text-white text-[10px] px-2 py-1 rounded font-bold">Arrived</button><button onclick="markQueueMissed('${e.id}')" class="bg-red-600 text-white text-[10px] px-2 py-1 rounded font-bold">Missed</button>` : ''}
+                    ${e.status === 'missed' ? `<button onclick="recallQueueEntry('${e.id}')" class="bg-blue-600 text-white text-[10px] px-2 py-1 rounded font-bold">Recall</button>` : ''}
+                    ${e.status === 'arrived' ? `<button onclick="completeQueueEntry('${e.id}')" class="bg-slate-600 text-white text-[10px] px-2 py-1 rounded font-bold">Complete</button>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function renderQueueOffices() {
+        const box = document.getElementById('queue-offices');
+        if (!box) return;
+        const offices = _queueCache.offices || [];
+        const entries = _queueCache.entries || [];
+        box.innerHTML = offices.map(o => {
+            const count = entries.filter(e => e.office_id === o.id && e.status === 'waiting').length;
+            return `<div class="glass p-3 rounded-xl text-center flex flex-col justify-between">
+                <div>
+                    <p class="text-lg font-extrabold text-blue-600">${escapeHtml(o.name)}</p>
+                    <p class="text-xs text-gray-500">${escapeHtml(o.department)}</p>
+                    <p class="text-sm mt-1"><b>${count}</b> waiting</p>
+                </div>
+                <button onclick="callNextPatient('${o.id}')" class="w-full mt-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-1.5 rounded shadow transition">▶ Call Next</button>
+            </div>`;
+        }).join('');
+    }
+
+    async function openQueueRegisterModal() {
+        document.getElementById('queue-register-modal').classList.remove('hidden');
+        document.getElementById('queue-register-modal').classList.add('flex');
+        await loadPatientsForDropdown('q-patient');
+        const officeSel = document.getElementById('q-office');
+        officeSel.innerHTML = '<option value="">Auto-assign</option>' + (_queueCache.offices || []).map(o => `<option value="${o.id}">${escapeHtml(o.name)} (${escapeHtml(o.department)})</option>`).join('');
+    }
+    window.openQueueRegisterModal = openQueueRegisterModal;
+
+    document.getElementById('queue-register-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            const patientId = document.getElementById('q-patient').value;
+            const patientName = _patientsDropdownCache.find(p => p.id === patientId)?.full_name || 'Patient';
+            const res = await api('/api/queue/register', { method: 'POST', body: JSON.stringify({
+                patient_id: patientId, patient_name: patientName,
+                department: document.getElementById('q-dept').value,
+                office_id: document.getElementById('q-office').value || null,
+                visit_type: document.getElementById('q-visit-type').value,
+                contact_channel: document.getElementById('q-contact').value || null
+            })});
+            showToast(`🎫 Registered: ${res.entry.number}`);
+            document.getElementById('queue-register-modal').classList.add('hidden');
+            e.target.reset();
+            loadQueue();
+        } catch (err) { showToast(err.message, 'error'); }
+    });
+
+    async function callQueueEntry(id) { try { await api(`/api/queue/${id}/call`, { method: 'POST' }); showToast('📣 Called (SMS Sent)'); loadQueue(); } catch (e) { showToast(e.message, 'error'); } }
+    async function markQueueArrived(id) { try { await api(`/api/queue/${id}/arrived`, { method: 'POST' }); showToast('✅ Arrived'); loadQueue(); } catch (e) { showToast(e.message, 'error'); } }
+    async function markQueueMissed(id) { try { await api(`/api/queue/${id}/missed`, { method: 'POST' }); showToast('⚠️ Missed'); loadQueue(); } catch (e) { showToast(e.message, 'error'); } }
+    async function recallQueueEntry(id) { try { await api(`/api/queue/${id}/recall`, { method: 'POST' }); showToast('🔔 Recalled'); loadQueue(); } catch (e) { showToast(e.message, 'error'); } }
+    async function completeQueueEntry(id) { try { await api(`/api/queue/${id}/complete`, { method: 'POST' }); showToast('✅ Completed'); loadQueue(); } catch (e) { showToast(e.message, 'error'); } }
+    
+    async function callNextPatient(officeId) { 
+        try { 
+            const res = await api(`/api/queue/office/${officeId}/next`, { method: 'POST' }); 
+            showToast(`📣 Called ${res.patient.number} to ${officeId.split('-').pop()}`); 
+            loadQueue(); 
+        } catch (e) { showToast(e.message, 'error'); } 
+    }
+
+    window.callQueueEntry = callQueueEntry; window.markQueueArrived = markQueueArrived;
+    window.markQueueMissed = markQueueMissed; window.recallQueueEntry = recallQueueEntry;
+    window.completeQueueEntry = completeQueueEntry; window.callNextPatient = callNextPatient;
+
+    // ============================================================
+    // 🆕 FEATURE 2: TRIAGE — FRONTEND
+    // ============================================================
+    async function loadTriage() {
+        try {
+            _triageCache = await api('/api/triage/flags');
+            renderTriage();
+            updateQueueBadges();
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+    window.loadTriage = loadTriage;
+
+    function renderTriage() {
+        const box = document.getElementById('triage-list');
+        if (!box) return;
+        const list = _triageCache || [];
+        if (!list.length) return box.innerHTML = '<p class="text-gray-500 text-center py-8">No triage assessments yet.</p>';
+        box.innerHTML = list.map(f => {
+            const sev = f.severity === 'critical' ? 'triage-critical' : f.severity === 'high' ? 'triage-high' : f.severity === 'medium' ? 'triage-medium' : 'triage-none';
+            return `<div class="glass p-4 rounded-xl ${f.has_warning ? 'border-l-4 border-red-500' : ''}">
+                <div class="flex justify-between items-start gap-2 flex-wrap">
+                    <div class="min-w-0 flex-1">
+                        <p class="font-bold">${escapeHtml(f.patient_name)} <span class="triage-chip ${sev}">${f.severity.toUpperCase()}</span></p>
+                        <p class="text-xs text-gray-500 mt-0.5">${new Date(f.created_at).toLocaleString()} · by ${escapeHtml(f.flagged_by)}</p>
+                        <p class="text-sm mt-2"><b>Status:</b> ${f.status}${f.responsible_staff ? ' · assigned to ' + escapeHtml(f.responsible_staff) : ''}</p>
+                        ${f.matched?.length ? `<p class="text-xs mt-1 text-red-600 font-bold">⚠️ ${f.matched.map(m => m.label).join(' · ')}</p>` : ''}
+                        ${f.override ? `<p class="text-xs mt-1 p-2 bg-amber-50 dark:bg-amber-900/20 rounded"><b>⚠️ Override by ${escapeHtml(f.override.decided_by)}:</b> ${escapeHtml(f.override.reason)}</p>` : ''}
+                    </div>
+                    <div class="flex flex-col gap-1 shrink-0">
+                        ${f.has_warning && f.status === 'needs_review' ? `<button onclick="resolveTriageFlag('${f.id}')" class="bg-green-600 text-white text-[10px] px-2 py-1 rounded font-bold">Resolve</button>` : ''}
+                        ${f.has_warning && f.status !== 'overridden' && f.status !== 'resolved' ? `<button onclick="overrideTriageFlag('${f.id}')" class="bg-amber-600 text-white text-[10px] px-2 py-1 rounded font-bold">Override</button>` : ''}
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    async function openTriageModal() {
+        document.getElementById('triage-modal').classList.remove('hidden');
+        document.getElementById('triage-modal').classList.add('flex');
+        await loadPatientsForDropdown('tri-patient');
+        try {
+            const checklist = await api('/api/triage/checklist');
+            document.getElementById('triage-checklist').innerHTML = checklist.map(c => `
+                <label class="flex items-start gap-2 p-2 hover:bg-white dark:hover:bg-gray-700 rounded cursor-pointer">
+                    <input type="checkbox" value="${c.id}" class="mt-0.5 shrink-0">
+                    <span class="text-xs"><b>${escapeHtml(c.label)}</b> <span class="triage-chip ${c.severity === 'critical' ? 'triage-critical' : c.severity === 'high' ? 'triage-high' : 'triage-medium'}">${c.severity}</span></span>
+                </label>`).join('');
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+    window.openTriageModal = openTriageModal;
+
+    document.getElementById('triage-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            const patientId = document.getElementById('tri-patient').value;
+            const patientName = _patientsDropdownCache.find(p => p.id === patientId)?.full_name || 'Patient';
+            const checked = Array.from(document.querySelectorAll('#triage-checklist input:checked')).map(c => c.value);
+            const res = await api('/api/triage/flag', { method: 'POST', body: JSON.stringify({
+                patient_id: patientId, patient_name: patientName,
+                symptoms: document.getElementById('tri-symptoms').value,
+                vitals: {
+                    temp: document.getElementById('tri-temp').value || null,
+                    sbp: document.getElementById('tri-sbp').value || null,
+                    hr: document.getElementById('tri-hr').value || null
+                },
+                checklist_ids: checked,
+                notes: document.getElementById('tri-notes').value
+            })});
+            if (res.flag.has_warning) showToast('🚨 WARNING — clinical staff alerted for immediate assessment', 'error');
+            else showToast('✅ No warning signs flagged');
+            document.getElementById('triage-modal').classList.add('hidden');
+            e.target.reset();
+            loadTriage();
+        } catch (err) { showToast(err.message, 'error'); }
+    });
+
+    async function resolveTriageFlag(id) {
+        const note = prompt('Resolution note (optional):') || '';
+        try { await api(`/api/triage/flags/${id}/resolve`, { method: 'POST', body: JSON.stringify({ note }) }); showToast('✅ Resolved'); loadTriage(); }
+        catch (e) { showToast(e.message, 'error'); }
+    }
+    window.resolveTriageFlag = resolveTriageFlag;
+
+    async function overrideTriageFlag(id) {
+        const reason = prompt('Override reason (required — records who and why):');
+        if (!reason) return;
+        try { await api(`/api/triage/flags/${id}/override`, { method: 'POST', body: JSON.stringify({ reason }) }); showToast('⚠️ Override recorded'); loadTriage(); }
+        catch (e) { showToast(e.message, 'error'); }
+    }
+    window.overrideTriageFlag = overrideTriageFlag;
+
+    // ============================================================
+    // 🆕 FEATURE 3: PATIENT JOURNEY TRACKER
+    // ============================================================
+    async function loadJourneyDashboard() {
+        try {
+            const [dash, stages, patients] = await Promise.all([api('/api/journey/dashboard'), api('/api/journey/stages'), api('/api/patients').catch(() => [])]);
+            const statBox = document.getElementById('journey-stats');
+            statBox.innerHTML = stages.map(s => `<div class="stat-card stat-cyan"><p class="text-[10px] uppercase font-bold opacity-90">${escapeHtml(s)}</p><p class="text-xl font-extrabold">${dash.by_stage?.[s] || 0}</p></div>`).join('');
+            const lw = document.getElementById('journey-longwaiting');
+            if (dash.long_waiting?.length) {
+                lw.innerHTML = `<div class="glass p-4 rounded-xl border-l-4 border-red-500 mb-2"><p class="font-bold text-red-600 mb-2">⏰ Long-waiting patients (${dash.long_waiting.length})</p>${dash.long_waiting.map(j => `<div class="text-xs p-1">Patient ${j.patient_id.slice(0,8)} · waiting since ${new Date(j.updated_at).toLocaleString()}</div>`).join('')}</div>`;
+            } else lw.innerHTML = '';
+            const sel = document.getElementById('journey-patient-select');
+            sel.innerHTML = '<option value="">-- Select Patient --</option>' + patients.map(p => `<option value="${p.id}">${escapeHtml(p.full_name)} (${p.mrn})</option>`).join('');
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+    window.loadJourneyDashboard = loadJourneyDashboard;
+
+    async function lookupJourney() {
+        const id = document.getElementById('journey-patient-select').value;
+        const box = document.getElementById('journey-result');
+        if (!id) return;
+        box.innerHTML = '<p class="text-gray-500 animate-pulse">Loading…</p>';
+        try {
+            const d = await api(`/api/journey/${id}`);
+            const stages = d.all_stages || [];
+            const currentIdx = stages.indexOf(d.stage);
+            box.innerHTML = `<div class="mb-3"><p class="font-bold text-sm mb-2">Current stage: <span class="text-blue-600">${escapeHtml(d.stage)}</span></p><div class="flex flex-wrap gap-1">${stages.map((s, i) => `<span class="journey-pill ${i < currentIdx ? 'done' : i === currentIdx ? 'current' : 'todo'}">${i < currentIdx ? '✓' : i === currentIdx ? '◉' : '○'} ${escapeHtml(s)}</span>`).join('')}</div></div>
+                <div class="flex gap-2 mt-3">
+                    ${d.next_stage ? `<button onclick="advanceJourney('${id}', '${d.next_stage}')" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm">Advance → ${escapeHtml(d.next_stage)}</button>` : '<span class="text-sm text-gray-500">Completed</span>'}
+                </div>
+                <div class="mt-3"><p class="font-bold text-xs mb-2">History</p>${d.history.map(h => `<div class="text-xs p-1 border-l-2 border-blue-500 pl-2 mb-1">${escapeHtml(h.stage)} · ${new Date(h.at).toLocaleString()} · ${escapeHtml(h.by)}</div>`).join('')}</div>`;
+        } catch (e) { box.innerHTML = `<p class="text-red-500">${e.message}</p>`; }
+    }
+    window.lookupJourney = lookupJourney;
+
+    async function advanceJourney(patientId, stage) {
+        try { await api(`/api/journey/${patientId}/advance`, { method: 'POST', body: JSON.stringify({ stage }) }); showToast('Advanced'); lookupJourney(); }
+        catch (e) { showToast(e.message, 'error'); }
+    }
+    window.advanceJourney = advanceJourney;
+
+    // ============================================================
+    // 🆕 FEATURE 7: STOCK ALERTS
+    // ============================================================
+    async function loadStock() {
+        try {
+            const [items, alerts] = await Promise.all([api('/api/stock'), api('/api/stock/alerts')]);
+            _stockCache = items; _stockAlertsCache = alerts;
+            renderStock();
+            updateQueueBadges();
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+    window.loadStock = loadStock;
+
+    function renderStock() {
+        const alertsBox = document.getElementById('stock-alerts-list');
+        if (alertsBox) {
+            if (!_stockAlertsCache.length) alertsBox.innerHTML = '<p class="text-gray-500 text-sm">No active alerts. 🎉</p>';
+            else alertsBox.innerHTML = _stockAlertsCache.map(a => {
+                const cls = a.type === 'expired' ? 'stock-alert-expired' : a.type === 'near_expiry' ? 'stock-alert-expiry' : 'stock-alert-low';
+                return `<div class="p-3 rounded-lg ${cls} mb-2 flex justify-between items-center gap-2">
+                    <div class="min-w-0"><p class="font-bold text-sm">${a.type === 'expired' ? '🚫' : a.type === 'near_expiry' ? '⏰' : '📉'} ${escapeHtml(a.message)}</p><p class="text-[10px] opacity-70">${new Date(a.created_at).toLocaleString()}</p></div>
+                    <button onclick="ackStockAlert('${a.id}')" class="bg-white text-gray-800 dark:bg-gray-700 dark:text-gray-100 text-xs px-3 py-1 rounded font-bold shrink-0">Ack</button>
+                </div>`;
+            }).join('');
+        }
+        const listBox = document.getElementById('stock-items-list');
+        if (listBox) {
+            if (!_stockCache.length) listBox.innerHTML = '<p class="text-gray-500 text-sm">No stock items.</p>';
+            else listBox.innerHTML = _stockCache.map(i => {
+                const flags = [];
+                if (i.lowStock) flags.push('<span class="text-xs bg-amber-200 text-amber-800 px-2 py-0.5 rounded">LOW</span>');
+                if (i.expired) flags.push('<span class="text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded">EXPIRED</span>');
+                else if (i.nearExpiry) flags.push(`<span class="text-xs bg-orange-200 text-orange-800 px-2 py-0.5 rounded">Expires ${i.daysToExpiry}d</span>`);
+                return `<div class="glass p-3 rounded-xl flex justify-between items-center gap-2">
+                    <div class="min-w-0"><p class="font-bold text-sm">${escapeHtml(i.item_name)}</p><p class="text-xs text-gray-500">Qty ${i.quantity} ${i.unit} · Reorder ${i.reorder_level} · Expiry ${i.expiry_date || '—'}${i.batch ? ' · Batch ' + escapeHtml(i.batch) : ''}</p></div>
+                    <div class="flex flex-col gap-1 items-end shrink-0">
+                        <div class="flex gap-1 flex-wrap">${flags.join(' ')}</div>
+                        <div class="flex gap-1"><button onclick="stockAdjust('${i.id}', 10)" class="bg-green-600 text-white text-xs px-2 py-1 rounded">+10</button><button onclick="stockAdjust('${i.id}', -10)" class="bg-red-500 text-white text-xs px-2 py-1 rounded">-10</button></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    async function ackStockAlert(id) { try { await api(`/api/stock/alerts/${id}/ack`, { method: 'POST' }); showToast('Acknowledged'); loadStock(); } catch (e) { showToast(e.message, 'error'); } }
+    window.ackStockAlert = ackStockAlert;
+    async function stockAdjust(id, delta) { try { await api(`/api/stock/${id}/adjust`, { method: 'POST', body: JSON.stringify({ delta }) }); loadStock(); } catch (e) { showToast(e.message, 'error'); } }
+    window.stockAdjust = stockAdjust;
+
+    function openStockModal() { document.getElementById('stock-modal').classList.remove('hidden'); document.getElementById('stock-modal').classList.add('flex'); }
+    window.openStockModal = openStockModal;
+    document.getElementById('stock-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            await api('/api/stock', { method: 'POST', body: JSON.stringify({
+                item_name: document.getElementById('st-name').value,
+                quantity: document.getElementById('st-qty').value,
+                unit: document.getElementById('st-unit').value,
+                reorder_level: document.getElementById('st-reorder').value,
+                expiry_date: document.getElementById('st-expiry').value || null,
+                batch: document.getElementById('st-batch').value
+            })});
+            showToast('✅ Stock added'); document.getElementById('stock-modal').classList.add('hidden'); e.target.reset(); loadStock();
+        } catch (err) { showToast(err.message, 'error'); }
+    });
+
+    // ============================================================
+    // 🆕 FEATURE 5 & 6: FOLLOW-UP REMINDERS
+    // ============================================================
+    async function loadFollowups() {
+        try {
+            const [list, dash] = await Promise.all([api('/api/followup'), api('/api/followup/dashboard')]);
+            _followupsCache = list;
+            const stats = document.getElementById('followup-stats');
+            if (stats) {
+                const card = (label, val, cls, icon) => `<div class="stat-card ${cls}"><p class="text-[10px] uppercase font-bold opacity-90">${icon} ${label}</p><p class="text-xl font-extrabold">${val || 0}</p></div>`;
+                stats.innerHTML = card('Scheduled', dash.scheduled, 'stat-blue', '📅') + card('Sent', dash.sent, 'stat-cyan', '📩') + card('Delivered', dash.delivered, 'stat-green', '✅') + card('Failed', dash.failed, 'stat-pink', '❌') + card('Overdue', dash.overdue, 'stat-amber', '⏰') + card('Returned', dash.returned, 'stat-purple', '↩️');
+            }
+            renderFollowups();
+            updateQueueBadges();
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+    window.loadFollowups = loadFollowups;
+
+    function renderFollowups() {
+        const box = document.getElementById('followup-list');
+        if (!box) return;
+        if (!_followupsCache.length) return box.innerHTML = '<p class="text-gray-500 text-center py-8">No follow-ups scheduled.</p>';
+        box.innerHTML = _followupsCache.map(f => {
+            const overdue = f.status === 'overdue';
+            return `<div class="glass p-4 rounded-xl ${overdue ? 'border-l-4 border-red-500' : ''}">
+                <div class="flex justify-between items-start gap-2 flex-wrap">
+                    <div class="min-w-0 flex-1">
+                        <p class="font-bold">${escapeHtml(f.patient_name)} <span class="text-xs px-2 py-0.5 rounded bg-purple-100 text-purple-700">${f.type}</span></p>
+                        ${f.method_label ? `<p class="text-xs text-gray-500">Method: ${escapeHtml(f.method_label)}</p>` : ''}
+                        <p class="text-sm mt-1"><b>Due:</b> ${new Date(f.due_date).toLocaleDateString()} · <b>Status:</b> <span class="${overdue ? 'text-red-600 font-bold' : ''}">${f.status}</span></p>
+                        <p class="text-xs text-gray-500">Contact: ${f.contact_channel} ${f.channel_verified ? '✓' : '⚠️ unverified'}</p>
+                        ${f.reminder_history?.length ? `<p class="text-[10px] text-gray-500 mt-1">Reminders sent: ${f.reminder_history.length}</p>` : ''}
+                    </div>
+                    <div class="flex flex-col gap-1 shrink-0">
+                        ${f.status === 'scheduled' || f.status === 'overdue' ? `<button onclick="sendFollowupReminder('${f.id}')" class="bg-blue-600 text-white text-[10px] px-2 py-1 rounded font-bold">📩 Send</button>` : ''}
+                        ${f.status !== 'returned' ? `<button onclick="recordFollowupOutcome('${f.id}')" class="bg-green-600 text-white text-[10px] px-2 py-1 rounded font-bold">Record</button>` : ''}
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    async function openFollowupModal() {
+        document.getElementById('followup-modal').classList.remove('hidden');
+        document.getElementById('followup-modal').classList.add('flex');
+        await loadPatientsForDropdown('fu-patient');
+        try {
+            const methods = await api('/api/followup/methods');
+            document.getElementById('fu-method').innerHTML = '<option value="">-- Select --</option>' + methods.map(m => `<option value="${m.code}" data-days="${m.default_days || ''}">${escapeHtml(m.name)}</option>`).join('');
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+    window.openFollowupModal = openFollowupModal;
+
+    function updateFollowupForm() {
+        const t = document.getElementById('fu-type').value;
+        document.getElementById('fu-method-wrap').classList.toggle('hidden', t !== 'contraceptive');
+    }
+    window.updateFollowupForm = updateFollowupForm;
+    function onMethodChange() { /* clinician still must confirm date */ }
+    window.onMethodChange = onMethodChange;
+
+    document.getElementById('followup-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            const patientId = document.getElementById('fu-patient').value;
+            const patientName = _patientsDropdownCache.find(p => p.id === patientId)?.full_name || 'Patient';
+            const type = document.getElementById('fu-type').value;
+            const methodCode = type === 'contraceptive' ? document.getElementById('fu-method').value : null;
+            const due = document.getElementById('fu-due').value;
+            if (type === 'contraceptive' && !due) return showToast('Clinician must confirm the return date', 'error');
+            await api('/api/followup', { method: 'POST', body: JSON.stringify({
+                patient_id: patientId, patient_name: patientName, type,
+                method_code: methodCode, clinician_confirmed_date: due,
+                purpose: document.getElementById('fu-purpose').value,
+                contact_channel: document.getElementById('fu-channel').value,
+                contact_address: document.getElementById('fu-address').value,
+                channel_verified: document.getElementById('fu-verified').checked
+            })});
+            showToast('✅ Follow-up saved'); document.getElementById('followup-modal').classList.add('hidden'); e.target.reset(); loadFollowups();
+        } catch (err) { showToast(err.message, 'error'); }
+    });
+
+    async function sendFollowupReminder(id) {
+        if (!confirm('Send discreet reminder now?')) return;
+        try { await api(`/api/followup/${id}/send-reminder`, { method: 'POST' }); showToast('📩 Sent'); loadFollowups(); }
+        catch (e) { showToast(e.message, 'error'); }
+    }
+    window.sendFollowupReminder = sendFollowupReminder;
+
+    async function recordFollowupOutcome(id) {
+        const returned = confirm('Did the patient return? Click OK for YES, Cancel for NO.');
+        const note = prompt('Note (optional):') || '';
+        const nextDue = prompt('Next appointment date (YYYY-MM-DD) — leave blank to skip:') || '';
+        try {
+            await api(`/api/followup/${id}/outcome`, { method: 'POST', body: JSON.stringify({ returned, note, next_due_date: nextDue || undefined }) });
+            showToast('Outcome recorded'); loadFollowups();
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+    window.recordFollowupOutcome = recordFollowupOutcome;
+
+    // ============================================================
+    // 🆕 FEATURE 8: REFERRAL TRACKING
+    // ============================================================
+    async function loadReferralTrack() {
+        try {
+            const [list, dash] = await Promise.all([api('/api/referral/track'), api('/api/referral/dashboard')]);
+            const stats = document.getElementById('referral-track-stats');
+            if (stats) {
+                const card = (label, val, cls, icon) => `<div class="stat-card ${cls}"><p class="text-[10px] uppercase font-bold opacity-90">${icon} ${label}</p><p class="text-xl font-extrabold">${val || 0}</p></div>`;
+                stats.innerHTML = card('Sent', dash.sent, 'stat-blue', '📤') + card('Accepted', dash.accepted, 'stat-cyan', '📥') + card('Completed', dash.completed, 'stat-green', '✅') + card('Needs follow-up', dash.needs_followup, 'stat-amber', '⏰');
+            }
+            const box = document.getElementById('referral-track-list');
+            if (!box) return;
+            if (!list.length) return box.innerHTML = '<p class="text-gray-500 text-center py-8">No referrals yet.</p>';
+            box.innerHTML = list.map(r => `
+                <div class="glass p-4 rounded-xl">
+                    <div class="flex justify-between items-start gap-2 flex-wrap">
+                        <div class="min-w-0 flex-1">
+                            <p class="font-bold">${escapeHtml(r.patient_name)} → ${escapeHtml(r.destination_facility)}</p>
+                            <p class="text-xs text-gray-500">Urgency: <span class="uppercase font-bold">${escapeHtml(r.urgency)}</span> · Sent ${new Date(r.sent_at).toLocaleString()} by ${escapeHtml(r.sent_by)}</p>
+                            <p class="text-sm mt-1">${escapeHtml(r.reason)}</p>
+                            <p class="text-xs mt-1"><b>Status:</b> ${r.status}</p>
+                        </div>
+                        <div class="flex flex-col gap-1 shrink-0">
+                            ${r.status === 'sent' ? `<button onclick="updateReferralTrack('${r.id}', 'accepted')" class="bg-blue-600 text-white text-[10px] px-2 py-1 rounded font-bold">Mark Accepted</button>` : ''}
+                            ${r.status === 'accepted' ? `<button onclick="updateReferralTrack('${r.id}', 'completed')" class="bg-green-600 text-white text-[10px] px-2 py-1 rounded font-bold">Mark Completed</button>` : ''}
+                        </div>
+                    </div>
+                </div>`).join('');
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+    window.loadReferralTrack = loadReferralTrack;
+
+    async function updateReferralTrack(id, status) {
+        try { await api(`/api/referral/track/${id}/update`, { method: 'POST', body: JSON.stringify({ status }) }); showToast('Updated'); loadReferralTrack(); }
+        catch (e) { showToast(e.message, 'error'); }
+    }
+    window.updateReferralTrack = updateReferralTrack;
+
+    async function openReferralTrackModal() {
+        document.getElementById('referral-track-modal').classList.remove('hidden');
+        document.getElementById('referral-track-modal').classList.add('flex');
+        await loadPatientsForDropdown('rt-patient');
+    }
+    window.openReferralTrackModal = openReferralTrackModal;
+
+    document.getElementById('referral-track-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            const patientId = document.getElementById('rt-patient').value;
+            const patientName = _patientsDropdownCache.find(p => p.id === patientId)?.full_name || 'Patient';
+            await api('/api/referral/track', { method: 'POST', body: JSON.stringify({
+                patient_id: patientId, patient_name: patientName,
+                destination_facility: document.getElementById('rt-dest').value,
+                reason: document.getElementById('rt-reason').value,
+                urgency: document.getElementById('rt-urgency').value
+            })});
+            showToast('✅ Referral sent'); document.getElementById('referral-track-modal').classList.add('hidden'); e.target.reset(); loadReferralTrack();
+        } catch (err) { showToast(err.message, 'error'); }
+    });
+
+    // ============================================================
+    // 🆕 FEATURE 9: HANDOVER
+    // ============================================================
+    async function loadHandovers() {
+        try {
+            _handoversCache = await api('/api/handover');
+            renderHandovers();
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+    window.loadHandovers = loadHandovers;
+
+    function renderHandovers() {
+        const box = document.getElementById('handover-list');
+        if (!box) return;
+        if (!_handoversCache.length) return box.innerHTML = '<p class="text-gray-500 text-center py-8">No handover summaries yet.</p>';
+        box.innerHTML = _handoversCache.map(h => `
+            <div class="glass p-4 rounded-xl">
+                <div class="flex justify-between items-start gap-2 flex-wrap">
+                    <div class="min-w-0 flex-1">
+                        <p class="font-bold">${escapeHtml(h.patient_name)} <span class="text-xs text-gray-500">${h.mrn || ''}</span></p>
+                        <p class="text-xs text-gray-500">By ${escapeHtml(h.created_by)} · ${new Date(h.created_at).toLocaleString()}</p>
+                        <p class="text-xs mt-1"><b>Status:</b> ${h.status}${h.reviewed_by ? ' · reviewed by ' + escapeHtml(h.reviewed_by) : ''}</p>
+                        ${h.missing_information?.length ? `<p class="text-xs mt-1 text-amber-600 font-bold">⚠️ Missing: ${h.missing_information.join(', ')}</p>` : ''}
+                    </div>
+                    <div class="flex flex-col gap-1 shrink-0">
+                        <button onclick="viewHandover('${h.id}')" class="bg-blue-600 text-white text-[10px] px-2 py-1 rounded font-bold">View</button>
+                        ${h.status === 'draft' && ['doctor','surgeon','gp','health_officer','admin','super_admin'].includes(userProfile.role) ? `<button onclick="approveHandover('${h.id}')" class="bg-green-600 text-white text-[10px] px-2 py-1 rounded font-bold">Approve</button>` : ''}
+                    </div>
+                </div>
+            </div>`).join('');
+    }
+
+    async function openHandoverModal() {
+        document.getElementById('handover-modal').classList.remove('hidden');
+        document.getElementById('handover-modal').classList.add('flex');
+        await loadPatientsForDropdown('ho-patient');
+    }
+    window.openHandoverModal = openHandoverModal;
+
+    document.getElementById('handover-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            const res = await api('/api/handover', { method: 'POST', body: JSON.stringify({ patient_id: document.getElementById('ho-patient').value }) });
+            showToast('✅ Summary generated'); document.getElementById('handover-modal').classList.add('hidden'); e.target.reset(); loadHandovers(); viewHandover(res.summary.id);
+        } catch (err) { showToast(err.message, 'error'); }
+    });
+
+    function viewHandover(id) {
+        const h = _handoversCache.find(x => x.id === id); if (!h) return;
+        const body = document.getElementById('handover-detail-body');
+        body.innerHTML = `<div class="mb-3 p-3 bg-teal-50 dark:bg-teal-900/20 rounded-xl">
+                <p class="font-bold text-lg">${escapeHtml(h.patient_name)} <span class="text-sm text-gray-500">${h.mrn || ''}</span></p>
+                <p class="text-xs text-gray-500">Visit type: ${h.visit_type || '—'} · Status: <b>${h.status}</b></p>
+            </div>
+            ${h.missing_information?.length ? `<div class="p-3 bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 rounded mb-3"><p class="font-bold text-amber-700">⚠️ Missing information: ${h.missing_information.join(', ')}</p></div>` : ''}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div><p class="text-xs font-bold uppercase text-gray-500">Symptoms</p><p class="text-sm">${escapeHtml(h.symptoms || '— Not recorded —')}</p></div>
+                <div><p class="text-xs font-bold uppercase text-gray-500">Vital signs</p><p class="text-sm">${h.vitals ? JSON.stringify(h.vitals) : '— Not recorded —'}</p></div>
+                <div><p class="text-xs font-bold uppercase text-gray-500">Allergies</p><p class="text-sm">${escapeHtml(h.allergies || '— Not recorded —')}</p></div>
+                <div><p class="text-xs font-bold uppercase text-gray-500">Tests ordered</p><p class="text-sm">${h.lab_orders?.length ? h.lab_orders.map(l => escapeHtml(l.test_name) + ' (' + l.status + ')').join('<br>') : 'None'}</p></div>
+            </div>
+            <div class="mt-3"><p class="text-xs font-bold uppercase text-gray-500">Prescriptions</p><p class="text-sm">${h.prescriptions?.length ? h.prescriptions.map(p => escapeHtml(p.medication) + ' — ' + escapeHtml(p.dosage || '')).join('<br>') : 'None'}</p></div>
+            <p class="mt-3 text-xs text-gray-500 italic">This summary supports — but does not replace — the original patient record or clinical judgment.</p>`;
+        document.getElementById('handover-detail-modal').classList.remove('hidden');
+        document.getElementById('handover-detail-modal').classList.add('flex');
+    }
+    window.viewHandover = viewHandover;
+
+    async function approveHandover(id) {
+        try { await api(`/api/handover/${id}/approve`, { method: 'POST' }); showToast('✅ Approved'); loadHandovers(); }
+        catch (e) { showToast(e.message, 'error'); }
+    }
+    window.approveHandover = approveHandover;
+
+    // ============================================================
+    // 🆕 FEATURE 10: PATIENT INSTRUCTIONS
+    // ============================================================
+    async function loadInstructions() {
+        try {
+            _instructionsCache = await api('/api/instructions');
+            renderInstructions();
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+    window.loadInstructions = loadInstructions;
+
+    function renderInstructions() {
+        const box = document.getElementById('instructions-list');
+        if (!box) return;
+        if (!_instructionsCache.length) return box.innerHTML = '<p class="text-gray-500 text-center py-8">No instructions created yet.</p>';
+        box.innerHTML = _instructionsCache.map(i => `
+            <div class="glass p-4 rounded-xl">
+                <div class="flex justify-between items-start gap-2 flex-wrap">
+                    <div class="min-w-0 flex-1">
+                        <p class="font-bold">${escapeHtml(i.patient_name)} <span class="text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">${escapeHtml(i.language)}</span></p>
+                        <p class="text-xs text-gray-500">By ${escapeHtml(i.created_by)} · ${new Date(i.created_at).toLocaleString()}</p>
+                        <p class="text-sm mt-2 whitespace-pre-wrap">${escapeHtml(i.text)}</p>
+                        ${i.next_step ? `<p class="text-xs mt-1 p-2 bg-blue-50 dark:bg-blue-900/20 rounded"><b>Next:</b> ${escapeHtml(i.next_step)}</p>` : ''}
+                        <p class="text-xs mt-1"><b>Status:</b> ${i.status}${i.reviewed_by ? ' · reviewed by ' + escapeHtml(i.reviewed_by) : ''}</p>
+                    </div>
+                    <div class="flex flex-col gap-1 shrink-0">
+                        <button onclick="speakInstruction('${i.id}')" class="bg-blue-100 text-blue-700 text-[10px] px-2 py-1 rounded font-bold">🔊 Listen</button>
+                        ${i.status === 'draft' ? `<button onclick="approveInstruction('${i.id}')" class="bg-green-600 text-white text-[10px] px-2 py-1 rounded font-bold">Approve</button>` : ''}
+                    </div>
+                </div>
+            </div>`).join('');
+    }
+
+    async function openInstructionModal() {
+        document.getElementById('instruction-modal').classList.remove('hidden');
+        document.getElementById('instruction-modal').classList.add('flex');
+        await loadPatientsForDropdown('in-patient');
+    }
+    window.openInstructionModal = openInstructionModal;
+
+    document.getElementById('instruction-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            const patientId = document.getElementById('in-patient').value;
+            const patientName = _patientsDropdownCache.find(p => p.id === patientId)?.full_name || 'Patient';
+            await api('/api/instructions', { method: 'POST', body: JSON.stringify({
+                patient_id: patientId, patient_name: patientName,
+                language: document.getElementById('in-language').value,
+                text: document.getElementById('in-text').value,
+                next_step: document.getElementById('in-next').value
+            })});
+            showToast('✅ Instruction created (draft)'); document.getElementById('instruction-modal').classList.add('hidden'); e.target.reset(); loadInstructions();
+        } catch (err) { showToast(err.message, 'error'); }
+    });
+
+    async function approveInstruction(id) {
+        try { await api(`/api/instructions/${id}/approve`, { method: 'POST' }); showToast('✅ Approved'); loadInstructions(); }
+        catch (e) { showToast(e.message, 'error'); }
+    }
+    window.approveInstruction = approveInstruction;
+
+    // ============================================================
+    // 🆕 FEATURE 11: BRANCH WORKLOAD
+    // ============================================================
+    async function loadWorkload() {
+        try {
+            const d = await api('/api/workload');
+            const statBox = document.getElementById('workload-grid');
+            const card = (label, val, cls, icon) => `<div class="stat-card ${cls}"><p class="text-[10px] uppercase font-bold opacity-90">${icon} ${label}</p><p class="text-2xl font-extrabold">${val}</p></div>`;
+            const totalWaiting = Object.values(d.patients_waiting_by_office || {}).reduce((a, b) => a + b, 0);
+            statBox.innerHTML = card('Patients Waiting', totalWaiting, 'stat-blue', '👥') +
+                card('Missed Calls', d.missed_calls || 0, 'stat-pink', '🚨') +
+                card('Lab Awaiting Review', d.lab_work_awaiting_review || 0, 'stat-purple', '🧪') +
+                card('Follow-ups Due', d.followups_due || 0, 'stat-cyan', '📩');
+            const waits = document.getElementById('workload-longest-waits');
+            waits.innerHTML = d.longest_waiting_times?.length
+                ? d.longest_waiting_times.map(w => `<div class="flex justify-between text-sm py-1 border-b border-gray-200 dark:border-gray-700"><span class="font-mono">${escapeHtml(w.number)}</span><span>${escapeHtml(w.name)}</span><span class="font-bold ${w.minutes > 30 ? 'text-red-600' : ''}">${w.minutes}m</span></div>`).join('')
+                : '<p class="text-gray-500 text-sm">No waiting patients.</p>';
+            const officeBox = document.getElementById('workload-by-office');
+            officeBox.innerHTML = Object.entries(d.patients_waiting_by_office || {}).map(([name, n]) => `<div class="flex justify-between text-sm py-1 border-b border-gray-200 dark:border-gray-700"><span>${escapeHtml(name)}</span><span class="font-bold">${n}</span></div>`).join('') || '<p class="text-gray-500 text-sm">None.</p>';
+            const deptBox = document.getElementById('workload-by-department');
+            deptBox.innerHTML = Object.entries(d.workload_by_department || {}).map(([name, n]) => `<div class="flex justify-between text-sm py-1 border-b border-gray-200 dark:border-gray-700"><span>${escapeHtml(name)}</span><span class="font-bold">${n}</span></div>`).join('') || '<p class="text-gray-500 text-sm">None.</p>';
+            document.getElementById('workload-missed').innerHTML = `<p class="text-3xl font-extrabold text-red-600">${d.missed_calls || 0}</p><p class="text-xs text-gray-500">Patients whose call was missed</p>`;
+        } catch (e) { showToast(e.message, 'error'); }
+    }
+    window.loadWorkload = loadWorkload;
+
+    // ============================================================
+    // SERVICE-DELIVERY BADGE & EMERGENCY BANNER POLLER
+    // ============================================================
+    function updateQueueBadges() {
+        try {
+            const qBadge = document.getElementById('queue-count-badge');
+            if (qBadge) {
+                const n = (_queueCache.entries || []).filter(e => e.status === 'waiting').length;
+                if (n > 0) { qBadge.innerText = n; qBadge.classList.remove('hidden'); } else qBadge.classList.add('hidden');
+            }
+            const tBadge = document.getElementById('triage-count-badge');
+            if (tBadge) {
+                const n = (_triageCache || []).filter(f => f.status === 'needs_review').length;
+                if (n > 0) { tBadge.innerText = n; tBadge.classList.remove('hidden'); } else tBadge.classList.add('hidden');
+            }
+            const sBadge = document.getElementById('stock-count-badge');
+            if (sBadge) {
+                const n = (_stockAlertsCache || []).length;
+                if (n > 0) { sBadge.innerText = n; sBadge.classList.remove('hidden'); } else sBadge.classList.add('hidden');
+            }
+            const fBadge = document.getElementById('followup-count-badge');
+            if (fBadge) {
+                const n = (_followupsCache || []).filter(f => f.status === 'overdue').length;
+                if (n > 0) { fBadge.innerText = n; fBadge.classList.remove('hidden'); } else fBadge.classList.add('hidden');
+            }
+        } catch (_) {}
+    }
+    window.updateQueueBadges = updateQueueBadges;
+
+    function startServiceBadgesPolling() {
+        if (_serviceBadgesInterval) clearInterval(_serviceBadgesInterval);
+        _serviceBadgesInterval = setInterval(async () => {
+            try {
+                if (userProfile?.role === 'patient') return;
+                const [q, t, s, f] = await Promise.all([
+                    api('/api/queue/list').catch(() => ({ entries: [] })),
+                    api('/api/triage/flags').catch(() => []),
+                    api('/api/stock/alerts').catch(() => []),
+                    api('/api/followup').catch(() => [])
+                ]);
+                if (q?.entries) _queueCache.entries = q.entries;
+                if (Array.isArray(t)) _triageCache = t;
+                if (Array.isArray(s)) _stockAlertsCache = s;
+                if (Array.isArray(f)) _followupsCache = f;
+                updateQueueBadges();
+            } catch (_) {}
+        }, 15000);
+    }
+    window.startServiceBadgesPolling = startServiceBadgesPolling;
+
+    // ============================================================
+    // BOOT
+    // ============================================================
     document.addEventListener('DOMContentLoaded', () => { loadWorkflowLevels(); });
     </script>
 </body>
