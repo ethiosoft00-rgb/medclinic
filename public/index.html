@@ -83,7 +83,6 @@
         .chart-card { background:#fff; border:1px solid #e5e7eb; border-radius:1rem; padding:1rem; }
         .dark .chart-card { background:#1f2937; border-color:#374151; }
         
-        /* NEW: REAL CLINICAL IMAGES WITH HOVER */
         .clinical-img-card { position:relative; overflow:hidden; border-radius:1rem; height:180px; background-size:cover; background-position:center; transition: transform .3s, box-shadow .3s; }
         .clinical-img-card:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
         .clinical-img-card::after { content:''; position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,.85),rgba(0,0,0,.05)); }
@@ -192,14 +191,7 @@
             .page-hero, .stat-card { color: #000 !important; background: #eee !important; }
         }
 
-        /* ============================================================
-           ✅ END OF ORIGINAL STYLES — NOTHING CUT ABOVE THIS LINE
-        ============================================================ */
-
-        /* ============================================================
-           🆕 ADDITION A1a — LOGIN DECORATION CSS
-           Added at end of <style>. Original styles untouched.
-        ============================================================ */
+        /* 🆕 ADDITION A1a — LOGIN DECORATION CSS */
         @keyframes blob {
             0%, 100% { transform: translate(0,0) scale(1); }
             33% { transform: translate(30px,-50px) scale(1.1); }
@@ -228,26 +220,18 @@
     <div id="login-screen" class="flex items-center justify-center flex-1 login-bg relative p-4 overflow-y-auto">
         <!-- 🆕 LOGIN DECORATION — added layer, existing icons and card stay untouched below -->
         <div class="login-dec-layer">
-            <!-- Real medical image background -->
-            <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=2000&q=80"
-                 class="absolute inset-0 w-full h-full object-cover opacity-25" alt="">
-            <!-- Gradient overlay -->
+            <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=2000&q=80" class="absolute inset-0 w-full h-full object-cover opacity-25" alt="">
             <div class="absolute inset-0 bg-gradient-to-br from-blue-950/95 via-purple-900/90 to-pink-900/85"></div>
-            <!-- Animated medical grid -->
             <div class="absolute inset-0 opacity-[0.07]" style="background-image: linear-gradient(rgba(96,165,250,.6) 1px, transparent 1px), linear-gradient(90deg, rgba(96,165,250,.6) 1px, transparent 1px); background-size: 50px 50px;"></div>
         </div>
-        <!-- Animated color blobs -->
         <div class="absolute top-10 left-10 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob pointer-events-none"></div>
         <div class="absolute top-40 right-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob pointer-events-none" style="animation-delay: 2s;"></div>
         <div class="absolute bottom-10 left-1/3 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob pointer-events-none" style="animation-delay: 4s;"></div>
-        <!-- EKG line animation -->
         <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 z-[1] pointer-events-none">
             <svg viewBox="0 0 1200 100" class="w-full h-20 opacity-25 ekg-line">
-                <path d="M0,50 L100,50 L110,50 L120,20 L130,80 L140,50 L240,50 L250,50 L260,20 L270,80 L280,50 L380,50 L390,50 L400,20 L410,80 L420,50 L520,50 L530,50 L540,20 L550,80 L560,50 L660,50 L670,50 L680,20 L690,80 L700,50 L800,50 L810,50 L820,20 L830,80 L840,50 L940,50 L950,50 L960,20 L970,80 L980,50 L1080,50 L1090,50 L1100,20 L1110,80 L1120,50 L1200,50"
-                      fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="2000" stroke-dashoffset="2000"/>
+                <path d="M0,50 L100,50 L110,50 L120,20 L130,80 L140,50 L240,50 L250,50 L260,20 L270,80 L280,50 L380,50 L390,50 L400,20 L410,80 L420,50 L520,50 L530,50 L540,20 L550,80 L560,50 L660,50 L670,50 L680,20 L690,80 L700,50 L800,50 L810,50 L820,20 L830,80 L840,50 L940,50 L950,50 L960,20 L970,80 L980,50 L1080,50 L1090,50 L1100,20 L1110,80 L1120,50 L1200,50" fill="none" stroke="#60a5fa" stroke-width="2" stroke-dasharray="2000" stroke-dashoffset="2000"/>
             </svg>
         </div>
-        <!-- LEFT HERO PANEL (desktop only, doesn't affect the centered card) -->
         <div class="login-hero-panel hidden lg:flex flex-col items-center text-center text-white space-y-4 absolute left-4 xl:left-16 top-1/2 -translate-y-1/2 max-w-sm z-[2] pointer-events-none">
             <div class="w-20 h-20 bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 rounded-3xl flex items-center justify-center shadow-2xl transform rotate-3 heartbeat">
                 <span class="text-4xl">🩺</span>
@@ -273,7 +257,6 @@
             </div>
             <p class="text-[10px] text-blue-300/70 mt-2">🏆 Bahir Dar University Hackathon · 2025</p>
         </div>
-        <!-- 🆕 END OF LOGIN DECORATION — ORIGINAL CONTENT BELOW UNCHANGED -->
 
         <!-- Animated Floating Icons -->
         <div class="floating-icon" style="left:5%;animation-delay:0s;animation-duration:22s;">🩺</div>
@@ -355,7 +338,7 @@
             </div>
         </div>
     </div>
-            <!-- ================= APP SCREEN ================= -->
+        <!-- ================= APP SCREEN ================= -->
     <div id="app-screen" class="hidden flex-1 flex overflow-hidden w-full h-full">
         <div id="mobile-header" class="md:hidden fixed top-0 left-0 right-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm px-3 py-2 flex items-center justify-between no-print">
             <button onclick="toggleSidebar()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Menu">
@@ -426,9 +409,8 @@
                             <button onclick="switchTab('triage')" class="nav-btn w-full flex items-center justify-between p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-triage">
                                 <span>🚨 Urgent Triage</span><span id="triage-count-badge" class="hidden badge-red">0</span>
                             </button>
-                            <!-- 🆕 ADDITION — ETA Insights nav button -->
+                            <!-- 🆕 ETA nav button -->
                             <button onclick="switchTab('eta')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-eta">⏱️ ETA Insights</button>
-                            <!-- END 🆕 ETA nav button -->
                             <button onclick="switchTab('journey')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-journey">🛤️ Journey Tracker</button>
                             <button onclick="switchTab('stock-alerts')" class="nav-btn w-full flex items-center justify-between p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-stock-alerts">
                                 <span>📦 Stock Alerts</span><span id="stock-count-badge" class="hidden badge-red">0</span>
@@ -440,9 +422,10 @@
                             <button onclick="switchTab('instructions')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-instructions">🗣️ Instructions</button>
                             <button onclick="switchTab('workload')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-workload">📈 Workload</button>
                             <button onclick="switchTab('tv')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-tv">📺 TV Screen Mode</button>
-                            <!-- 🆕 ADDITION — QR Kiosk nav button -->
+                            <!-- 🆕 QR Kiosk nav button -->
                             <button onclick="switchTab('kiosk')" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300" id="nav-kiosk">📱 QR Kiosk</button>
-                            <!-- END 🆕 QR Kiosk nav button -->
+                            <!-- 🆕 TV Control nav button -->
+                            <button onclick="openTVControlModal()" class="nav-btn w-full flex items-center gap-3 p-2.5 rounded-xl font-bold text-amber-600 dark:text-amber-400" id="nav-tv-control">🎙️ TV Control (Manual Call)</button>
                         </nav>
                     </div>
                     <div id="patient-extras-nav" class="hidden">
@@ -503,17 +486,14 @@
                         </div>
                     </div>
                     
-                    <!-- STATS ROW -->
                     <div id="dash-stats" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6"></div>
                     
-                    <!-- CHARTS ROW -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
                         <div class="chart-card glass shadow-sm"><h3 class="font-bold text-sm mb-3">👥 Patients by Gender</h3><div class="h-52"><canvas id="chart-gender"></canvas></div></div>
                         <div class="chart-card glass shadow-sm"><h3 class="font-bold text-sm mb-3">📅 Appointments</h3><div class="h-52"><canvas id="chart-appts"></canvas></div></div>
                         <div class="chart-card glass shadow-sm"><h3 class="font-bold text-sm mb-3">🧪 Lab Orders</h3><div class="h-52"><canvas id="chart-lab"></canvas></div></div>
                     </div>
                     
-                    <!-- RECENT APPOINTMENTS -->
                     <div class="glass rounded-2xl shadow-sm mb-6 overflow-x-auto">
                         <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                             <h3 class="font-bold text-sm">📋 Recent Appointments</h3>
@@ -522,7 +502,6 @@
                         <div id="dash-recent-table"></div>
                     </div>
                     
-                    <!-- NEW: CLINICAL REFERENCE LIBRARY WITH REAL IMAGES -->
                     <h3 class="font-bold text-xl mb-3 flex items-center gap-2">🩻 Clinical Reference Library</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div class="clinical-img-card" style="background-image:url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80')">
@@ -565,7 +544,6 @@
 
                 <!-- ============================================================
                      🆕 ADDITION — QR KIOSK VIEW
-                     Added after Branches view. Original code untouched.
                 ============================================================ -->
                 <div id="view-kiosk" class="view-section fade-in hidden max-w-4xl mx-auto">
                     <div class="page-hero no-print">
@@ -605,8 +583,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- END 🆕 QR KIOSK VIEW -->
-                                 <!-- ================= FEED ================= -->
+                                <!-- ================= FEED ================= -->
                 <div id="view-feed" class="view-section fade-in hidden max-w-3xl mx-auto">
                     <div class="page-hero no-print">
                         <h2>🏠 Clinical Feed</h2>
@@ -674,9 +651,8 @@
                                 <div class="flex items-center gap-2">
                                     <span id="chat-unread-pill" class="hidden badge-red">0</span>
                                     <button id="chat-call-btn" onclick="openVideoCallWithChat()" class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 px-2 py-1 rounded font-bold hover:bg-blue-200 transition">📹 Call</button>
-                                    <!-- 🆕 ADDITION — Phone call button (added after existing Call button) -->
+                                    <!-- 🆕 Phone call button -->
                                     <button id="chat-phone-btn" onclick="openPhoneCallWithChat()" class="text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 px-2 py-1 rounded font-bold hover:bg-green-200 transition">📞 Phone</button>
-                                    <!-- END 🆕 Phone call button -->
                                     <button onclick="printCurrentView()" class="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded no-print">🖨️</button>
                                 </div>
                             </div>
@@ -699,7 +675,7 @@
                     </div>
                 </div>
 
-                                <!-- ================= LIVE CONFERENCE ================= -->
+                <!-- ================= LIVE CONFERENCE ================= -->
                 <div id="view-live" class="view-section fade-in hidden max-w-6xl mx-auto">
                     <div class="page-hero no-print">
                         <h2>🎥 Live Conference <span id="live-indicator" class="hidden live-dot ml-2"></span></h2>
@@ -782,13 +758,12 @@
                                 <button onclick="sendReaction('👏')" class="bg-white/10 hover:bg-white/20 px-2 py-1 rounded-lg text-lg">👏</button>
                                 <button onclick="sendReaction('🔥')" class="bg-white/10 hover:bg-white/20 px-2 py-1 rounded-lg text-lg">🔥</button>
                             </div>
-                            <!-- 🆕 ADDITION — Vibration controls (added right after reactions row, before Layout row) -->
+                            <!-- 🆕 Vibration controls -->
                             <div class="flex flex-wrap items-center gap-2 mb-3 text-xs">
                                 <span class="opacity-70">Moderator alert:</span>
                                 <button onclick="sendLiveVibration('long')" class="bg-amber-600 hover:bg-amber-700 px-3 py-1 rounded text-xs font-bold">📳 Vibrate All</button>
                                 <button onclick="sendLiveVibration('short')" class="bg-amber-500 hover:bg-amber-600 px-3 py-1 rounded text-xs font-bold">📳 Short Buzz</button>
                             </div>
-                            <!-- END 🆕 Vibration controls -->
                             <div class="flex flex-wrap items-center gap-2 mb-3 text-xs">
                                 <span class="opacity-70">Layout:</span>
                                 <button onclick="setLiveLayout('auto')" class="bg-white/10 hover:bg-white/20 px-2 py-1 rounded">Auto</button>
@@ -860,7 +835,7 @@
                 </div>
 
                 <!-- =====================================================
-                     🆕 VIEW: TV SCREEN MODE (Upgraded with AI Language Selector)
+                     🆕 VIEW: TV SCREEN MODE
                 ====================================================== -->
                 <div id="view-tv" class="view-section fade-in hidden tv-screen fixed inset-0 z-[500] bg-slate-900">
                     <div class="tv-header flex flex-wrap justify-between items-center bg-slate-800 text-white p-6 shadow-2xl gap-4">
@@ -869,7 +844,6 @@
                             <h1 class="text-3xl font-extrabold tracking-widest text-blue-400 glow-text">MedConnect</h1>
                         </div>
                         <div class="flex items-center gap-4">
-                            <!-- NEW: TV Language Selector for AI Voice -->
                             <div class="flex flex-col items-center">
                                 <label class="text-xs text-gray-400 mb-1">Announcement Language</label>
                                 <select id="tv-lang-select" class="bg-slate-700 text-white border border-slate-600 rounded-lg p-2 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500">
@@ -888,19 +862,19 @@
                         </div>
                     </div>
                     <div class="tv-body relative">
-                        <!-- Background Decoration for TV -->
                         <div class="absolute top-10 left-10 text-8xl opacity-10">🏥</div>
                         <div class="absolute bottom-10 right-10 text-8xl opacity-10">🩺</div>
                         
+                        <!-- 🆕 TV ANNOUNCEMENTS CONTAINER -->
                         <div id="tv-announcements" class="w-full max-w-5xl space-y-6 relative z-10">
-                            <!-- Announcements injected here -->
                             <div class="text-center text-gray-500 text-2xl font-bold animate-pulse">
                                 Waiting for patient calls...
                             </div>
                         </div>
                     </div>
                 </div>
-                                <!-- =====================================================
+
+                <!-- =====================================================
                      NEW FEATURE 1: SMART QUEUE
                 ====================================================== -->
                 <div id="view-queue" class="view-section fade-in hidden max-w-5xl mx-auto">
@@ -922,13 +896,12 @@
                         <h3 class="font-bold text-sm mb-2">🏥 Offices</h3>
                         <div id="queue-offices" class="grid grid-cols-2 md:grid-cols-4 gap-2"></div>
                     </div>
-                    <!-- 🆕 ADDITION — Queue analytics charts (inserted after Offices block, before closing div) -->
+                    <!-- 🆕 Queue analytics charts -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
                         <div class="chart-card"><h3 class="font-bold text-sm mb-2">📊 Queue by Status</h3><div class="h-48"><canvas id="chart-queue-status"></canvas></div></div>
                         <div class="chart-card"><h3 class="font-bold text-sm mb-2">🏥 Wait by Office</h3><div class="h-48"><canvas id="chart-queue-office"></canvas></div></div>
                         <div class="chart-card"><h3 class="font-bold text-sm mb-2">⏱️ Wait Time Distribution</h3><div class="h-48"><canvas id="chart-queue-waits"></canvas></div></div>
                     </div>
-                    <!-- END 🆕 Queue analytics charts -->
                 </div>
 
                 <!-- =====================================================
@@ -944,12 +917,11 @@
                         </div>
                     </div>
                     <div id="triage-list" class="space-y-3"></div>
-                    <!-- 🆕 ADDITION — Triage analytics charts (inserted after triage-list) -->
+                    <!-- 🆕 Triage analytics charts -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                         <div class="chart-card"><h3 class="font-bold text-sm mb-2">🚨 Triage by Severity</h3><div class="h-48"><canvas id="chart-triage-sev"></canvas></div></div>
                         <div class="chart-card"><h3 class="font-bold text-sm mb-2">📊 Triage by Status</h3><div class="h-48"><canvas id="chart-triage-status"></canvas></div></div>
                     </div>
-                    <!-- END 🆕 Triage analytics charts -->
                 </div>
 
                 <!-- =====================================================
@@ -991,12 +963,11 @@
                     <div id="stock-alerts-list" class="space-y-2 mb-4"></div>
                     <h3 class="font-bold text-base mb-2">📊 Stock Items</h3>
                     <div id="stock-items-list" class="space-y-2"></div>
-                    <!-- 🆕 ADDITION — Stock analytics charts (inserted after stock-items-list) -->
+                    <!-- 🆕 Stock analytics charts -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                         <div class="chart-card"><h3 class="font-bold text-sm mb-2">📦 Stock Health</h3><div class="h-48"><canvas id="chart-stock-states"></canvas></div></div>
                         <div class="chart-card"><h3 class="font-bold text-sm mb-2">📊 Top 10 Items</h3><div class="h-48"><canvas id="chart-stock-levels"></canvas></div></div>
                     </div>
-                    <!-- END 🆕 Stock analytics charts -->
                 </div>
 
                 <!-- =====================================================
@@ -1013,12 +984,11 @@
                     </div>
                     <div id="followup-stats" class="grid grid-cols-2 md:grid-cols-6 gap-2 mb-4"></div>
                     <div id="followup-list" class="space-y-2"></div>
-                    <!-- 🆕 ADDITION — Follow-up analytics charts (inserted after followup-list) -->
+                    <!-- 🆕 Follow-up analytics charts -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                         <div class="chart-card"><h3 class="font-bold text-sm mb-2">📩 Follow-ups by Type</h3><div class="h-48"><canvas id="chart-fup-type"></canvas></div></div>
                         <div class="chart-card"><h3 class="font-bold text-sm mb-2">📊 Follow-ups by Status</h3><div class="h-48"><canvas id="chart-fup-status"></canvas></div></div>
                     </div>
-                    <!-- END 🆕 Follow-up analytics charts -->
                 </div>
 
                 <!-- =====================================================
@@ -1035,12 +1005,11 @@
                     </div>
                     <div id="referral-track-stats" class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4"></div>
                     <div id="referral-track-list" class="space-y-2"></div>
-                    <!-- 🆕 ADDITION — Referral analytics charts (inserted after referral-track-list) -->
+                    <!-- 🆕 Referral analytics charts -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                         <div class="chart-card"><h3 class="font-bold text-sm mb-2">🔗 Referrals by Status</h3><div class="h-48"><canvas id="chart-ref-status"></canvas></div></div>
                         <div class="chart-card"><h3 class="font-bold text-sm mb-2">⚠️ Referrals by Urgency</h3><div class="h-48"><canvas id="chart-ref-urgency"></canvas></div></div>
                     </div>
-                    <!-- END 🆕 Referral analytics charts -->
                 </div>
 
                 <!-- =====================================================
@@ -1237,7 +1206,6 @@
 
                 <!-- ============================================================
                      🆕 ADDITION — ETA INSIGHTS VIEW
-                     Inserted before Shell views. Original code untouched.
                 ============================================================ -->
                 <div id="view-eta" class="view-section fade-in hidden max-w-6xl mx-auto">
                     <div class="page-hero no-print">
@@ -1264,7 +1232,6 @@
                         <div id="eta-test-result" class="mt-3"></div>
                     </div>
                 </div>
-                <!-- END 🆕 ETA INSIGHTS VIEW -->
 
                 <!-- Shell views (Populated via JS) -->
                 <div id="view-patients" class="view-section fade-in hidden"></div>
@@ -1276,7 +1243,7 @@
             </main>
         </div>
     </div>
-            <!-- ================= CHATBOT & FLOATING BUTTONS ================= -->
+        <!-- ================= CHATBOT & FLOATING BUTTONS ================= -->
     <button id="chatbot-toggle" onclick="toggleChatbot()" class="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-[190] hover:scale-110 transition no-print">🤖</button>
     <div id="chatbot-window" class="hidden fixed bottom-24 right-6 w-80 md:w-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-[190] flex flex-col overflow-hidden no-print" style="height:500px;max-height:80vh;">
         <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white flex justify-between items-center">
@@ -1488,6 +1455,44 @@
             </form>
         </div>
     </div>
+
+    <!-- =========================================================
+         🆕 TV CONTROL MODAL (WORKER MANUAL CALL)
+    ========================================================== -->
+    <div id="tv-control-modal" class="hidden fixed inset-0 bg-black/60 z-[170] items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-5 border border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+                <h3 class="text-xl font-bold text-amber-600 dark:text-amber-400 flex items-center gap-2">🎙️ TV Announcement</h3>
+                <button onclick="closeTVControlModal()" class="text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 text-2xl leading-none">×</button>
+            </div>
+            <p class="text-xs text-gray-500 mb-4">Send a manual voice call to the waiting room TV. It will read it out loud in the TV's selected language.</p>
+            <form id="tv-control-form" class="space-y-3">
+                <div>
+                    <label class="text-xs font-bold mb-1 block">Patient Name (optional)</label>
+                    <input type="text" id="tv-patient-name" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-sm" placeholder="e.g. Abebe Bikila">
+                </div>
+                <div>
+                    <label class="text-xs font-bold mb-1 block">Target Office (optional)</label>
+                    <select id="tv-target-office" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-sm">
+                        <option value="General">General / Any</option>
+                        <option value="Laboratory">Laboratory</option>
+                        <option value="Emergency">Emergency Room</option>
+                        <option value="Pharmacy">Pharmacy</option>
+                        <option value="Clinical">Doctor's Office</option>
+                        <option value="Reception">Reception</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold mb-1 block">Message to speak *</label>
+                    <textarea id="tv-message" required rows="3" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-sm" placeholder="e.g. Please proceed to the Laboratory Desk"></textarea>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button type="submit" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-lg shadow">📢 Send to TV</button>
+                    <button type="button" onclick="closeTVControlModal()" class="bg-gray-300 dark:bg-gray-600 font-bold py-2 px-4 rounded-lg">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
             <script>
     // ============================================================
     // SUPABASE + GLOBALS
@@ -1526,7 +1531,6 @@
     let lastHeardText = '';
     let _lastAIAnswer = '';
 
-    // NEW feature caches
     let _queueCache = { entries: [], announcements: [], offices: [] };
     let _triageCache = [];
     let _stockCache = [];
@@ -1537,9 +1541,8 @@
     let _serviceBadgesInterval = null;
     let _tvInterval = null;
     let _emergencyOverrideDismissed = false;
-
-    // IMO-STYLE INCOMING CALL STATE
     let incomingCallData = null;
+    let _lastSpokenAnnouncementId = null; // For TV Auto-Announcements
 
     const ROLE_LABELS = {
         admin:'System Admin', super_admin:'Super Admin', branch_admin:'Branch Admin', doctor:'Doctor',
@@ -1882,6 +1885,7 @@
             if (tabId === 'handover') loadHandovers();
             if (tabId === 'instructions') loadInstructions();
             if (tabId === 'workload') loadWorkload();
+            if (tabId === 'eta') loadEtaInsights();
             
             if (tabId === 'tv') {
                 startTVMode();
@@ -1898,9 +1902,8 @@
     window.switchTab = switchTab;
 
     // ============================================================
-    // 🆕 TV SCREEN MODE LOGIC WITH AI VOICE
+    // 🆕 TV SCREEN MODE LOGIC WITH AI VOICE (UPDATED FOR MANUAL CALLS)
     // ============================================================
-    let _lastSpokenAnnouncementId = null;
     
     function startTVMode() {
         if (_tvInterval) clearInterval(_tvInterval);
@@ -1914,8 +1917,23 @@
 
         const fetchAnnouncements = async () => {
             try {
-                const q = await api('/api/queue/list');
-                const announcements = (q.announcements || []).slice(-3);
+                // Fetch both automated and manual announcements
+                const [q, manualData] = await Promise.all([
+                    api('/api/queue/list').catch(()=>({announcements:[]})),
+                    fetch('/api/tv/announcements').then(r=>r.json()).catch(()=>[]) // Public endpoint
+                ]);
+                
+                let announcements = (q.announcements || []).slice(-3); // Auto calls
+                
+                // Merge manual calls
+                if (manualData && manualData.length > 0) {
+                    announcements = announcements.concat(manualData.map(m => ({ id: m.id, text: m.text, at: m.at })));
+                }
+
+                // Sort and get the last 3
+                announcements.sort((a,b) => new Date(a.at) - new Date(b.at));
+                announcements = announcements.slice(-3);
+
                 const box = document.getElementById('tv-announcements');
                 
                 if (!announcements.length) {
@@ -1924,14 +1942,18 @@
                 }
                 
                 box.innerHTML = announcements.reverse().map(a => {
-                    const isEmergency = a.text.includes('EMERGENCY') || a.text.includes('URGENT');
+                    const isEmergency = a.text.includes('EMERGENCY') || a.text.includes('URGENT') || a.text.includes('🚨');
+                    const isManual = a.id && a.id.toString().startsWith('tv-');
+                    const colorClass = isEmergency ? 'bg-red-600 border-red-400' : (isManual ? 'bg-amber-600 border-amber-400' : 'bg-blue-600 border-blue-400');
+                    
                     return `
-                        <div class="p-8 mb-4 rounded-3xl ${isEmergency ? 'bg-red-600 border-4 border-red-400' : 'bg-blue-600 border-4 border-blue-400'} text-white text-4xl font-extrabold shadow-2xl text-center animate-pulse">
-                            ${a.text}
+                        <div class="p-8 mb-4 rounded-3xl ${colorClass} border-4 text-white text-4xl font-extrabold shadow-2xl text-center animate-pulse">
+                            ${isManual ? '🎙️ ' : ''}${a.text}
                         </div>
                     `;
                 }).join('');
 
+                // AI VOICE ANNOUNCEMENT
                 const latest = announcements[0];
                 if (latest && latest.id !== _lastSpokenAnnouncementId) {
                     _lastSpokenAnnouncementId = latest.id;
@@ -1946,6 +1968,52 @@
         _tvInterval = setInterval(fetchAnnouncements, 3000);
     }
     window.startTVMode = startTVMode;
+
+    // 🆕 TV CONTROL MODAL FUNCTIONS
+    function openTVControlModal() {
+        document.getElementById('tv-control-modal').classList.remove('hidden');
+        document.getElementById('tv-control-modal').classList.add('flex');
+        document.getElementById('tv-message').focus();
+    }
+    window.openTVControlModal = openTVControlModal;
+
+    function closeTVControlModal() {
+        document.getElementById('tv-control-modal').classList.add('hidden');
+        document.getElementById('tv-control-modal').classList.remove('flex');
+        document.getElementById('tv-control-form').reset();
+    }
+    window.closeTVControlModal = closeTVControlModal;
+
+    document.getElementById('tv-control-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const patientName = document.getElementById('tv-patient-name').value.trim();
+        const office = document.getElementById('tv-target-office').value;
+        const message = document.getElementById('tv-message').value.trim();
+        
+        if (!message) return showToast('Message is required', 'error');
+        
+        // Construct the spoken text
+        let fullText = '';
+        if (patientName) {
+            fullText += `Patient ${patientName}, `;
+        }
+        fullText += message;
+        if (office && office !== 'General') {
+            fullText += ` Please proceed to ${office}.`;
+        }
+
+        try {
+            await api('/api/tv/announce', { method: 'POST', body: JSON.stringify({
+                text: fullText,
+                target_office: office,
+                patient_name: patientName
+            })});
+            showToast('📢 Announcement sent to TV');
+            closeTVControlModal();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    });
 
     // ============================================================
     // IMO-STYLE DIRECT 1‑1 VIDEO CALL
@@ -4314,7 +4382,6 @@
         } catch (err) { showToast(err.message, 'error'); }
     });
 
-    // 🆕 ADDITION A6a — Modified viewHandover to inject AI button (original preserved, only appended AI button HTML)
     function viewHandover(id) {
         const h = _handoversCache.find(x => x.id === id); if (!h) return;
         const body = document.getElementById('handover-detail-body');
@@ -4331,10 +4398,9 @@
             </div>
             <div class="mt-3"><p class="text-xs font-bold uppercase text-gray-500">Prescriptions</p><p class="text-sm">${h.prescriptions?.length ? h.prescriptions.map(p => escapeHtml(p.medication) + ' — ' + escapeHtml(p.dosage || '')).join('<br>') : 'None'}</p></div>
             <p class="mt-3 text-xs text-gray-500 italic">This summary supports — but does not replace — the original patient record or clinical judgment.</p>
-            <!-- 🆕 AI HANDOVER BUTTON (addition) -->
+            <!-- 🆕 AI HANDOVER BUTTON -->
             <button onclick="aiEnhanceHandover('${h.id}')" class="w-full mt-3 bg-purple-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-purple-700 transition">🤖 Generate AI Narrative</button>
-            <div id="handover-ai-${h.id}"></div>
-            <!-- END 🆕 AI HANDOVER BUTTON -->`;
+            <div id="handover-ai-${h.id}"></div>`;
         document.getElementById('handover-detail-modal').classList.remove('hidden');
         document.getElementById('handover-detail-modal').classList.add('flex');
     }
@@ -4488,10 +4554,6 @@
     // ============================================================
     document.addEventListener('DOMContentLoaded', () => { loadWorkflowLevels(); });
 
-    // ============================================================
-    // ============================================================
-    // ✅ END OF ORIGINAL SCRIPT — NOTHING CUT ABOVE THIS LINE
-    // ============================================================
     // ============================================================
     // 🆕 ALL NEW FEATURE ADDITIONS (JS wiring only)
     // ============================================================
@@ -4721,7 +4783,7 @@
     }
     window.loadReferralCharts = loadReferralCharts;
 
-    // --- 🆕 A6i: HOOK — charts auto-load on tab switch (wraps existing switchTab) ---
+    // --- 🆕 A6i: HOOK — charts auto-load on tab switch ---
     if (typeof switchTab === 'function') {
         const _origSwitchTab = switchTab;
         window.switchTab = function(tabId) {
@@ -4739,7 +4801,7 @@
         };
     }
 
-    // --- 🆕 A6j: HOOK — error toasts also vibrate (wraps existing showToast) ---
+    // --- 🆕 A6j: HOOK — error toasts also vibrate ---
     if (typeof showToast === 'function') {
         const _origShowToast = showToast;
         window.showToast = function(msg, type = 'success') {

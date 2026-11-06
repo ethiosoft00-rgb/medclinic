@@ -1,7 +1,6 @@
 // ============================================================
 // MedConnect Ethiopia — server.js (Part 1 of 4)
 // ⚠️ THIS IS THE COMPLETE PART 1 — no code was cut.
-//     QR Kiosk additions appended at the end (marked clearly).
 // ============================================================
 import express from 'express';
 import path from 'path';
@@ -348,7 +347,6 @@ function generateKioskCode(branchId) {
     return `${branch}-${code}`;
 }
 
-// Public: kiosk self-register (NO login required)
 app.post('/api/kiosk/register', async (req, res) => {
     try {
         const { full_name, phone, gender, visit_type, branch_id } = req.body;
@@ -403,12 +401,10 @@ app.post('/api/kiosk/register', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Public: kiosk office list
 app.get('/api/kiosk/offices', (req, res) => {
     res.json(DEFAULT_OFFICES.filter(o => o.active));
 });
 
-// Public: kiosk queue summary (waiting room display)
 app.get('/api/kiosk/queue-summary/:branchId', (req, res) => {
     const branchId = req.params.branchId || 'default';
     const q = _getQueue(branchId);
@@ -423,7 +419,6 @@ app.get('/api/kiosk/queue-summary/:branchId', (req, res) => {
     });
 });
 
-// Auth: generate a kiosk QR code session for the branch
 app.post('/api/kiosk/session', auth, role('branch_admin', 'admin', 'super_admin'), (req, res) => {
     const code = generateKioskCode(req.user.branch_id);
     KIOSK_SESSIONS.set(code, {
@@ -436,8 +431,6 @@ app.post('/api/kiosk/session', auth, role('branch_admin', 'admin', 'super_admin'
 });
 // ============================================================
 // MedConnect Ethiopia — server.js (Part 2 of 4)
-// ⚠️ COMPLETE PART 2 — no code cut.
-//     ETA Engine additions appended at the end (marked clearly).
 // ============================================================
 
 // ============================================================
@@ -467,7 +460,6 @@ app.post('/api/queue/:id/call', auth, (req, res) => {
     const office = q.offices.get(entry.office_id);
     const officeName = office?.name || 'Office';
     
-    // AI TTS Format
     _pushAnnouncement(entry.branch_id, `📢 ${entry.patient_name}, please go to ${officeName}.`);
     
     if (entry.private_contact) {
@@ -490,7 +482,6 @@ app.post('/api/queue/office/:officeId/next', auth, (req, res) => {
     nextInLine.called_at = new Date().toISOString();
     
     const office = q.offices.get(officeId);
-    // AI TTS Format
     _pushAnnouncement(nextInLine.branch_id, `📢 ${nextInLine.patient_name}, please proceed to ${office.name}.`);
     
     res.json({ success: true, patient: nextInLine });
@@ -650,7 +641,6 @@ app.post('/api/call/signal', auth, async (req, res) => {
     try {
         const { to, type, payload } = req.body;
         if (!to || !type) return res.status(400).json({ error: 'to and type required' });
-        // ADD fromName TO PAYLOAD FOR IMO-STYLE NOTIFICATION
         const enrichedPayload = { ...payload, fromName: req.user.name };
         pushCallSignal(req.user.id, to, type, enrichedPayload);
         res.json({ success: true });
@@ -813,7 +803,7 @@ app.get('/api/live/signal', auth, async (req, res) => {
 // 🆕 ADDITION A2 — ETA ENGINE (data-driven wait prediction)
 //     Added at end of Part 2. Original code untouched.
 // ============================================================
-const ETA_HISTORY = new Map(); // branchId -> [{department, waitMinutes, timestamp}]
+const ETA_HISTORY = new Map();
 
 function recordEtaSample(branchId, department, waitMinutes) {
     if (!ETA_HISTORY.has(branchId)) ETA_HISTORY.set(branchId, []);
@@ -833,7 +823,6 @@ function getAvgServiceTime(branchId, department) {
     return Math.max(2, Math.round(sum / deptSamples.length));
 }
 
-// Detailed ETA for a specific queue entry
 app.get('/api/queue/eta/:entryId', auth, (req, res) => {
     const q = _getQueue(req.user.branch_id || 'default');
     const entry = q.entries.get(req.params.entryId);
@@ -869,7 +858,6 @@ app.get('/api/queue/eta/:entryId', auth, (req, res) => {
     });
 });
 
-// ETA insights / historical analysis
 app.get('/api/queue/eta-insights', auth, (req, res) => {
     const branchId = req.user.branch_id || 'default';
     const arr = ETA_HISTORY.get(branchId) || [];
@@ -898,7 +886,6 @@ app.get('/api/queue/eta-insights', auth, (req, res) => {
     res.json({ by_department: insights, hourly_pattern: hourlyPattern, total_samples: arr.length });
 });
 
-// Record ETA sample when patient completes (called from frontend after complete)
 app.post('/api/queue/:id/complete-eta', auth, (req, res) => {
     const q = _getQueue(req.user.branch_id || 'default');
     const entry = q.entries.get(req.params.id);
@@ -909,8 +896,6 @@ app.post('/api/queue/:id/complete-eta', auth, (req, res) => {
 });
 // ============================================================
 // MedConnect Ethiopia — server.js (Part 3 of 4)
-// ⚠️ COMPLETE PART 3 — no code cut.
-//     Phone Calls + AI Handover additions appended at the end.
 // ============================================================
 
 // ============================================================
@@ -991,7 +976,6 @@ app.post('/api/journey/:patientId/advance', auth, (req, res) => {
     j.updated_at = new Date().toISOString();
     j.history.push({ stage: target, at: j.updated_at, by: req.user.name });
 
-    // DYNAMIC QUEUE ROUTING (Close old ticket, create new ticket)
     const branchId = req.user.branch_id || 'default';
     const q = _getQueue(branchId);
     
@@ -1077,7 +1061,6 @@ app.post('/api/lab-orders/:id/status', auth, role('lab_tech', 'radiologist', 'ra
             });
             _pushAnnouncement(req.user.branch_id || 'default', `🧪 Lab result READY. Clinician notified (private).`);
 
-            // LAB PING-PONG: Auto-route patient back to Doctor's queue
             const q = _getQueue(req.user.branch_id || 'default');
             q.seq += 1;
             const returnTicket = {
@@ -1530,9 +1513,6 @@ app.post('/api/call/phone', auth, async (req, res) => {
         PHONE_CALLS.push(callRecord);
         if (PHONE_CALLS.length > 1000) PHONE_CALLS.shift();
 
-        // TODO: Integrate real VoIP here (Twilio / Africa's Talking / Vonage)
-        // Example:
-        // await twilioClient.calls.create({ to: to_number, from: TWILIO_NUMBER, url: 'https://.../twiml' });
         const providerResponse = { message: 'Simulated — integrate Twilio/Africa\'s Talking here' };
         _pushAnnouncement(req.user.branch_id || 'default', `📞 ${req.user.name} called ${to_name || to_number}`);
         res.json({ success: true, call: callRecord, provider: providerResponse });
@@ -1585,9 +1565,6 @@ app.post('/api/handover/:id/ai-enhance', auth, async (req, res) => {
 });
 // ============================================================
 // MedConnect Ethiopia — server.js (Part 4 of 4)
-// ⚠️ COMPLETE PART 4 — no code cut.
-//     Live Vibration + Chart Endpoints additions appended at end.
-//     This completes the full server.js file.
 // ============================================================
 
 // ============================================================
@@ -1972,7 +1949,6 @@ app.post('/api/prescriptions', auth, role('doctor', 'surgeon', 'gp', 'health_off
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// PHARMACY AUTO-COMPLETE (JOURNEY & QUEUE)
 app.put('/api/prescriptions/:id/dispense', auth, role('pharmacist', 'pharmacy_tech', 'admin', 'super_admin'), async (req, res) => {
     try {
         const { data, error } = await supabase.from('prescriptions').update({ status: 'dispensed', dispensed_by: req.user.id, dispensed_at: new Date().toISOString() }).eq('id', req.params.id).select('id, patient_id').single();
@@ -1980,7 +1956,6 @@ app.put('/api/prescriptions/:id/dispense', auth, role('pharmacist', 'pharmacy_te
         
         await recordWorkflow(data.patient_id, 4, 5, 'social_work', req.user.id, 'Medication dispensed → follow-up');
 
-        // AUTO-COMPLETE QUEUE & JOURNEY
         const q = _getQueue(req.user.branch_id || 'default');
         for (let entry of q.entries.values()) {
             if (entry.patient_id === data.patient_id && !['completed', 'cancelled'].includes(entry.status)) {
@@ -2175,13 +2150,11 @@ app.post('/api/workflow/transition', auth, async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 🆕 NEW: UNASSIGN PATIENT (Moves them back to the queue or clears their current active task)
 app.post('/api/workflow/unassign', auth, async (req, res) => {
     try {
         const { patient_id } = req.body;
         if (!patient_id) return res.status(400).json({ error: 'patient_id required' });
         
-        // Remove from any active queues
         const q = _getQueue(req.user.branch_id || 'default');
         for (let entry of q.entries.values()) {
             if (entry.patient_id === patient_id && !['completed', 'cancelled'].includes(entry.status)) {
@@ -2189,20 +2162,17 @@ app.post('/api/workflow/unassign', auth, async (req, res) => {
             }
         }
 
-        // Log the unassignment in the workflow
         await recordWorkflow(patient_id, null, 1, 'queue', req.user.id, 'Unassigned from current office by ' + req.user.name);
         
         res.json({ success: true, message: 'Patient unassigned and removed from active queue.' });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 🆕 NEW: DISCHARGE / DELETE PATIENT FROM ACTIVE LIST (Completes their visit)
 app.post('/api/workflow/discharge', auth, async (req, res) => {
     try {
         const { patient_id, notes } = req.body;
         if (!patient_id) return res.status(400).json({ error: 'patient_id required' });
         
-        // Complete any active queues
         const q = _getQueue(req.user.branch_id || 'default');
         for (let entry of q.entries.values()) {
             if (entry.patient_id === patient_id && !['completed', 'cancelled'].includes(entry.status)) {
@@ -2211,7 +2181,6 @@ app.post('/api/workflow/discharge', auth, async (req, res) => {
             }
         }
 
-        // Update journey to Completed
         const j = _getJourney(patient_id);
         if (j) {
             j.stage = 'Completed';
@@ -2219,7 +2188,6 @@ app.post('/api/workflow/discharge', auth, async (req, res) => {
             j.history.push({ stage: 'Completed', at: j.updated_at, by: req.user.name });
         }
 
-        // Log discharge at Level 10 (Final level)
         await recordWorkflow(patient_id, null, 10, 'discharged', req.user.id, notes || 'Patient discharged / visit finished');
         
         res.json({ success: true, message: 'Patient discharged successfully.' });
@@ -2322,7 +2290,6 @@ app.post('/api/telegram/webhook', async (req, res) => {
 
 // ============================================================
 // 🆕 ADDITION A4a — LIVE CONFERENCE VIBRATION SIGNAL
-//     Added at end of Part 4. Original code untouched.
 // ============================================================
 app.post('/api/live/vibrate', auth, async (req, res) => {
     try {
@@ -2335,7 +2302,6 @@ app.post('/api/live/vibrate', auth, async (req, res) => {
 
 // ============================================================
 // 🆕 ADDITION A4b — CHART DATA ENDPOINTS (per-page dashboards)
-//     Added at end of Part 4. Original code untouched.
 // ============================================================
 app.get('/api/charts/queue', auth, (req, res) => {
     try {
@@ -2407,6 +2373,39 @@ app.get('/api/charts/lab', auth, async (req, res) => {
         }
         res.json({ by_status: byStatus, by_review: byReview });
     } catch (e) { res.json({ by_status: {}, by_review: { reviewed: 0, pending: 0 } }); }
+});
+
+// ============================================================
+// 🆕 ADDITION A5 — TV MANUAL ANNOUNCEMENTS (WORKER CONTROL)
+// ============================================================
+const TV_CUSTOM_ANNOUNCEMENTS = [];
+
+app.post('/api/tv/announce', auth, (req, res) => {
+    try {
+        const { text, target_office, patient_name } = req.body;
+        if (!text) return res.status(400).json({ error: 'Text required' });
+        
+        const ann = {
+            id: `tv-${Date.now()}`,
+            text,
+            target_office: target_office || 'General',
+            patient_name: patient_name || '',
+            spoken_by: req.user.name,
+            at: new Date().toISOString()
+        };
+        
+        TV_CUSTOM_ANNOUNCEMENTS.push(ann);
+        if (TV_CUSTOM_ANNOUNCEMENTS.length > 50) TV_CUSTOM_ANNOUNCEMENTS.shift();
+        
+        // Also push to the main queue announcement feed as a fallback
+        _pushAnnouncement(req.user.branch_id || 'default', `📺 TV Call: ${text}`);
+        
+        res.json({ success: true, announcement: ann });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/tv/announcements', (req, res) => {
+    res.json(TV_CUSTOM_ANNOUNCEMENTS.slice(-5));
 });
 
 // ============================================================
