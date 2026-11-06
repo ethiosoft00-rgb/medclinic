@@ -1,10 +1,8 @@
 // ============================================================
-// MedConnect Ethiopia — server.js (Part 1 of 4)
-// ⚠️ THIS IS THE COMPLETE PART 1 — no code was cut.
+// MedConnect Ethiopia — server.js (Complete & Corrected)
 // ============================================================
 import express from 'express';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import multer from 'multer';
@@ -13,9 +11,10 @@ import jwt from 'jsonwebtoken';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.join(__dirname, '.env') });
+// ✅ FIX 1: Only load .env locally. Vercel injects variables automatically.
+if (!process.env.VERCEL) {
+    dotenv.config();
+}
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
@@ -36,14 +35,16 @@ const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200 });
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(express.static(path.join(__dirname, 'public'), { index: false }));
-app.use(express.static(path.join(__dirname), { index: false })); 
+
+// ✅ FIX 2: Use process.cwd() so Vercel finds the public folder at runtime
+app.use(express.static(path.join(process.cwd(), 'public'), { index: false }));
+app.use(express.static(path.join(process.cwd()), { index: false })); 
 
 async function sendFrontend(req, res) {
     try {
         const fs = await import('fs/promises');
-        let pagePath = path.join(__dirname, 'public', 'index.html');
-        try { await fs.access(pagePath); } catch { pagePath = path.join(__dirname, 'index.html'); }
+        let pagePath = path.join(process.cwd(), 'public', 'index.html');
+        try { await fs.access(pagePath); } catch { pagePath = path.join(process.cwd(), 'index.html'); }
         let page = await fs.readFile(pagePath, 'utf8');
         const slug = req.params.slug || '';
         page = page
@@ -207,7 +208,6 @@ app.post('/api/auth/register', loginLimiter, async (req, res) => {
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// 🆕 FIX: ADDED THE MISSING QUEUE REGISTER ROUTE
 app.post('/api/queue/register', auth, (req, res) => {
     try {
         const { patient_id, patient_name, department, office_id, visit_type, contact_channel } = req.body;
@@ -332,12 +332,7 @@ app.delete('/api/admin/branches/:id', auth, role('admin', 'super_admin'), async 
 });
 
 // ============================================================
-// ✅ END OF ORIGINAL PART 1 — NOTHING CUT ABOVE THIS LINE
-// ============================================================
-
-// ============================================================
-// 🆕 ADDITION A1 — QR KIOSK (walk-in self-registration)
-//     Added at end of Part 1. Original code untouched.
+// QR KIOSK (walk-in self-registration)
 // ============================================================
 const KIOSK_SESSIONS = new Map();
 
@@ -429,9 +424,6 @@ app.post('/api/kiosk/session', auth, role('branch_admin', 'admin', 'super_admin'
     const kioskUrl = `${req.protocol}://${req.get('host')}/kiosk/${code}`;
     res.json({ success: true, code, kiosk_url: kioskUrl });
 });
-// ============================================================
-// MedConnect Ethiopia — server.js (Part 2 of 4)
-// ============================================================
 
 // ============================================================
 // SMART QUEUE
@@ -796,12 +788,7 @@ app.get('/api/live/signal', auth, async (req, res) => {
 });
 
 // ============================================================
-// ✅ END OF ORIGINAL PART 2 — NOTHING CUT ABOVE THIS LINE
-// ============================================================
-
-// ============================================================
-// 🆕 ADDITION A2 — ETA ENGINE (data-driven wait prediction)
-//     Added at end of Part 2. Original code untouched.
+// ETA ENGINE (data-driven wait prediction)
 // ============================================================
 const ETA_HISTORY = new Map();
 
@@ -894,9 +881,6 @@ app.post('/api/queue/:id/complete-eta', auth, (req, res) => {
     recordEtaSample(req.user.branch_id || 'default', entry.department, waitMins);
     res.json({ success: true, waitMins });
 });
-// ============================================================
-// MedConnect Ethiopia — server.js (Part 3 of 4)
-// ============================================================
 
 // ============================================================
 // TRANSLATION & AI
@@ -1489,12 +1473,7 @@ app.get('/api/workload', auth, async (req, res) => {
 });
 
 // ============================================================
-// ✅ END OF ORIGINAL PART 3 — NOTHING CUT ABOVE THIS LINE
-// ============================================================
-
-// ============================================================
-// 🆕 ADDITION A3 — PHONE CALLS (VoIP stub — plug Twilio here)
-//     Added at end of Part 3. Original code untouched.
+// PHONE CALLS (VoIP stub — plug Twilio here)
 // ============================================================
 const PHONE_CALLS = [];
 
@@ -1532,8 +1511,7 @@ app.get('/api/patients/:id/phone', auth, async (req, res) => {
 });
 
 // ============================================================
-// 🆕 ADDITION A3b — AI HANDOVER ENHANCEMENT
-//     Added at end of Part 3. Original code untouched.
+// AI HANDOVER ENHANCEMENT
 // ============================================================
 app.post('/api/handover/:id/ai-enhance', auth, async (req, res) => {
     try {
@@ -1563,9 +1541,6 @@ app.post('/api/handover/:id/ai-enhance', auth, async (req, res) => {
         res.json({ success: true, summary: h, ai_narrative: h.ai_narrative });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
-// ============================================================
-// MedConnect Ethiopia — server.js (Part 4 of 4)
-// ============================================================
 
 // ============================================================
 // CLINICAL FEED & MESSAGES
@@ -2285,11 +2260,7 @@ app.post('/api/telegram/webhook', async (req, res) => {
 });
 
 // ============================================================
-// ✅ END OF ORIGINAL PART 4 — NOTHING CUT ABOVE THIS LINE
-// ============================================================
-
-// ============================================================
-// 🆕 ADDITION A4a — LIVE CONFERENCE VIBRATION SIGNAL
+// LIVE CONFERENCE VIBRATION SIGNAL
 // ============================================================
 app.post('/api/live/vibrate', auth, async (req, res) => {
     try {
@@ -2301,7 +2272,7 @@ app.post('/api/live/vibrate', auth, async (req, res) => {
 });
 
 // ============================================================
-// 🆕 ADDITION A4b — CHART DATA ENDPOINTS (per-page dashboards)
+// CHART DATA ENDPOINTS (per-page dashboards)
 // ============================================================
 app.get('/api/charts/queue', auth, (req, res) => {
     try {
@@ -2376,7 +2347,7 @@ app.get('/api/charts/lab', auth, async (req, res) => {
 });
 
 // ============================================================
-// 🆕 ADDITION A5 — TV MANUAL ANNOUNCEMENTS (WORKER CONTROL)
+// TV MANUAL ANNOUNCEMENTS (WORKER CONTROL)
 // ============================================================
 const TV_CUSTOM_ANNOUNCEMENTS = [];
 
@@ -2397,7 +2368,6 @@ app.post('/api/tv/announce', auth, (req, res) => {
         TV_CUSTOM_ANNOUNCEMENTS.push(ann);
         if (TV_CUSTOM_ANNOUNCEMENTS.length > 50) TV_CUSTOM_ANNOUNCEMENTS.shift();
         
-        // Also push to the main queue announcement feed as a fallback
         _pushAnnouncement(req.user.branch_id || 'default', `📺 TV Call: ${text}`);
         
         res.json({ success: true, announcement: ann });
@@ -2409,7 +2379,7 @@ app.get('/api/tv/announcements', (req, res) => {
 });
 
 // ============================================================
-// 404 + BOOT
+// 404 + BOOT (Vercel & Localhost)
 // ============================================================
 app.use((req, res) => res.status(404).json({ error: 'API route not found.', url: req.url, method: req.method }));
 
